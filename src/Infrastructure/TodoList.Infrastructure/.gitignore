@@ -1,0 +1,30 @@
+# Arquivos de compilação C#
+bin/
+obj/
+
+# Arquivos de configuração
+*.userprefs
+*.suo
+*.cache
+*.vscode
+.vs/
+
+# Dependências do NuGet
+## Especifique a pasta "packages" se você estiver usando o pacote NuGet diretamente
+packages/
+
+# Logs e arquivos temporários
+*.log
+*.bak
+*.tmp
+
+# Arquivos de build Unity
+Builds/
+
+# Arquivos gerados pelo Rider
+.idea/
+*.sln.iml
+*.sln.DotSettings.user
+*.sln.DotSettings
+
+# Outros arquivos que você deseja ignorar
