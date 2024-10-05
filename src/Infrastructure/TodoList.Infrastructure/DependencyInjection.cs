@@ -1,7 +1,7 @@
 using System.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TodoList.Application.Ports;
+using TodoList.Application.ports.Repositories;
 using TodoList.Infrastructure.database;
 using TodoList.Infrastructure.Repositories;
 

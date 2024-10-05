@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Dapper;
-using TodoList.Application.Ports;
+using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
 using TodoList.Infrastructure.database;
 

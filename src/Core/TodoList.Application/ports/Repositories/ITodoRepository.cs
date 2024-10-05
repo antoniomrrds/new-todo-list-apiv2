@@ -1,6 +1,8 @@
 
 using TodoList.Domain.Entities;
-namespace TodoList.Application.Ports;
+
+namespace TodoList.Application.ports.Repositories;
+
 public interface ITodoRepository
 {
     Task<int> CreateAsync(Todo todo);
@@ -9,4 +11,3 @@ public interface ITodoRepository
     Task<int> UpdateAsync(Todo todo);
     Task<int> DeleteAsync(int id);
 }
-
