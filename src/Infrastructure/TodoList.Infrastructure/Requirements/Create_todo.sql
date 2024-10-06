@@ -1,9 +1,0 @@
-USE db_todo_list;
-CREATE TABLE IF NOT EXISTS tbl_todo (
-   ID_Todo INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-   Title VARCHAR(255) NOT NULL,
-   Description TEXT NOT NULL,
-   IsCompleted BOOLEAN NOT NULL,
-   CreatedAt DATETIME NOT NULL,
-   UpdatedAt DATETIME NOT NULL
-);

@@ -14,4 +14,8 @@
       <ProjectReference Include="..\..\Infrastructure\TodoList.Infrastructure\TodoList.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Controllers\Todo.cs" />
+    </ItemGroup>
+
 </Project>
