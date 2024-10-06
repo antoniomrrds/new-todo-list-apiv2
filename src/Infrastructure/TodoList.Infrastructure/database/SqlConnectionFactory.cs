@@ -15,4 +15,5 @@ public class SqlConnectionFactory
     {
         return new MySqlConnection(_connectionString);
     }
+    
 }

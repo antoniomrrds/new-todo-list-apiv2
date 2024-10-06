@@ -14,5 +14,6 @@ public static class DependencyInjectionApplication{
         {
             config.DisableDataAnnotationsValidation = true;
         });
+        
     }
 }
