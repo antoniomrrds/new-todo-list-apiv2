@@ -52,7 +52,7 @@ public class TagRepository: ITagRepository
     public Task<Tag?> GetByIdAsync(int id)
     {
         var sql = GetBaseQuery();
-        sql.AppendLine(" WHERE ID_Tag = @Id;");
+        sql.AppendLine(" WHERE ID = @Id;");
         var connection = _connectionFactory.Create();
         return connection.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id });
     }
@@ -77,7 +77,7 @@ public class TagRepository: ITagRepository
     {
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_tag");
-        sql.AppendLine(" WHERE ID_Tag = @Id;");
+        sql.AppendLine(" WHERE ID = @Id;");
         var connection = _connectionFactory.Create();
         return connection.ExecuteAsync(sql.ToString(), new { Id = id });
     }
@@ -85,7 +85,7 @@ public class TagRepository: ITagRepository
     private static StringBuilder GetBaseQuery()
     {
         var sql = new StringBuilder();
-        sql.AppendLine("SELECT ID_Tag,      ");
+        sql.AppendLine("SELECT ID,          ");
         sql.AppendLine("       Name,        ");
         sql.AppendLine("       Color,       ");
         sql.AppendLine("       Description, ");

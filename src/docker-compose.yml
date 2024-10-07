@@ -14,11 +14,13 @@ services:
       MYSQL_DATABASE: db_todo_list
       MYSQL_USER: user
       MYSQL_PASSWORD: pass123
+      MYSQL_ROOT_HOST: '%'
+    command: --default-authentication-plugin=mysql_native_password
     networks:
-      - db-test
+      - db-todo-list
 
 networks:
-  db-test:
+  db-todo-list:
     driver: bridge
     ipam:
       driver: default

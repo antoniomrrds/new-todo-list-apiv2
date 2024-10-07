@@ -30,7 +30,7 @@ public class TodoController : ControllerBase
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult);
+            return BadRequest(validationResult.Errors);
         }
 
         var todo = _mapper.Map<Todo>(createTodoDto);
@@ -74,7 +74,7 @@ public class TodoController : ControllerBase
         });
     }
 
-    [HttpPut]
+    [HttpPut("{id}")]
     public async Task<IActionResult> PutAsync(int id, TodoDto updateTodoDto)
     {
         var validationResult = await _validator.ValidateAsync(updateTodoDto);
@@ -90,7 +90,7 @@ public class TodoController : ControllerBase
             {
                 result = new
                 {
-                    message = "Nenhum todo encontrado.",
+                    message = "Nenhum todo com o id informado.",
                     status = HttpStatusCode.NotFound
                 }
             });

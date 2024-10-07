@@ -25,6 +25,7 @@ namespace TodoList.Infrastructure
             });
             
             services.AddTransient<ITodoRepository, TodoRepository>();
+            services.AddTransient<ITagRepository, TagRepository>();
 
         }
     }
