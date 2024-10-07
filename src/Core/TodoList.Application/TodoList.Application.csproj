@@ -14,4 +14,16 @@
     <ItemGroup>
       <ProjectReference Include="..\TodoList.Domain\TodoList.Domain.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Remove="Constants\Defaults.cs\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Remove="Constants\Defaults.cs\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <None Remove="Constants\Defaults.cs\**" />
+    </ItemGroup>
 </Project>
