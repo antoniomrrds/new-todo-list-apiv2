@@ -80,7 +80,7 @@ public class TodoController : ControllerBase
         var validationResult = await _validator.ValidateAsync(updateTodoDto);
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult);
+            return BadRequest(validationResult.Errors);
         }
 
         var todo = await _todoRepository.GetByIdAsync(id);

@@ -2,79 +2,119 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.ports.Repositories;
-using TodoList.Application.DTOs;
+using TodoList.Application.DTOs.Tag;
 using TodoList.Domain.Entities;
 
 namespace TodoList.Api.Controllers;
+
 [ApiController]
 [Route("api/tag")]
 public class TagController : ControllerBase
 {
     private readonly ITagRepository _tagRepository;
     private readonly IMapper _mapper;
-    private readonly IValidator<TagDTo> _validator;
-    
-    public TagController(ITagRepository tagRepository, IMapper mapper, IValidator<TagDTo> validator)
+    private readonly IValidator<TagCreateDTo> _createValidator;
+    private readonly IValidator<TagUpdateDTo> _updateValidator;
+
+    public TagController(ITagRepository tagRepository, IMapper mapper,
+        IValidator<TagCreateDTo> createValidator,
+        IValidator<TagUpdateDTo> updateValidator)
     {
         _tagRepository = tagRepository;
         _mapper = mapper;
-        _validator = validator;
+        _createValidator = _createValidator;
+        _updateValidator = _updateValidator;
     }
-    
+
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIdAsync(int id)
+    public async Task<ActionResult<ApiResponse<TagDTo>>> GetByIdAsync(int id)
     {
         var tag = await _tagRepository.GetByIdAsync(id);
         if (tag is null)
         {
-            return NotFound(new
+            return NotFound(new ApiResponse<string>
             {
-                result = new
-                {
-                    error = "Nenhuma tag encontrada com o id informado."
-                }
+                Errors = new[] { $"Nenhuma tag encontrada com o id: {id} informado." }
             });
-        }
-        var tagDto = _mapper.Map<Tag>(tag);
-        return Ok(tagDto);
-    }
-    
-    [HttpPost]
-    public async Task<IActionResult> CreateAsync(TagDTo tagDTo)
-    {
-        var validationResult = await _validator.ValidateAsync(tagDTo);
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.Errors);
-        }
-        var tag = _mapper.Map<Tag>(tagDTo);
-        await _tagRepository.CreateAsync(tag);
-        return Ok();
-    }
-    
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateAsync(int id,TagDTo tagDTo)
-    {
-        var validationResult = await _validator.ValidateAsync(tagDTo);
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.Errors);
         }
 
+        return Ok(new ApiResponse<TagDTo> { Data = tag });
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<IEnumerable<TagDTo>>>> GetAllAsync()
+    {
+        var tags = await _tagRepository.GetAllAsync();
+        return Ok(new ApiResponse<IEnumerable<TagDTo>> { Data = tags });
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ApiResponse<TagCreateDTo>>> CreateAsync(TagCreateDTo tagCreateDto)
+    {
+        var validationResult = await _createValidator.ValidateAsync(tagCreateDto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<TagCreateDTo>
+            {
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToArray()
+            });
+        }
+
+        var createdId = await _tagRepository.CreateAsync(tagCreateDto);
+        var response = new ApiResponse<TagCreateDTo> { Data = tagCreateDto };
+
+        return CreatedAtAction(
+            actionName: nameof(GetByIdAsync),
+            routeValues: new { id = createdId },
+            value: response
+        );
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponse<TagUpdateDTo>>> UpdateAsync(int id, TagUpdateDTo tagUpdateDto)
+    {
+        var existingTag = await _tagRepository.GetByIdAsync(id);
+        if (existingTag is null)
+        {
+            return NotFound(new ApiResponse<string>
+            {
+                Errors = new[] { $"Nenhuma tag encontrada com o id: {id} informado." }
+            });
+        }
+
+        var validationResult = await _updateValidator.ValidateAsync(tagUpdateDto);
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(new ApiResponse<TagUpdateDTo>
+            {
+                Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToArray()
+            });
+        }
+
+        await _tagRepository.UpdateAsync(tagUpdateDto);
+        return Ok(new ApiResponse<TagUpdateDTo> { Data = tagUpdateDto });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<string>>> DeleteAsync(int id)
+    {
         var tag = await _tagRepository.GetByIdAsync(id);
         if (tag is null)
         {
-            return NotFound(new
+            return NotFound(new ApiResponse<string>
             {
-                result = new
-                {
-                    error = "Nenhuma tag encontrada com o id informado."
-                }
+                Errors = new[] { $"Nenhuma tag encontrada com o id: {id} informado." }
             });
         }
-        var tagToUpdate = _mapper.Map<Tag>(tagDTo);
-        tagToUpdate.Id = id;
-        var updated = await _tagRepository.UpdateAsync(tag);
-        return Ok(updated);
+
+        await _tagRepository.DeleteAsync(id);
+        return NoContent();
+    }
+
+
+    public class ApiResponse<T>
+    {
+        public T Data { get; set; }
+        public IEnumerable<string> Errors { get; set; }
     }
 }
