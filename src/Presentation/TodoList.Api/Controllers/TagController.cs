@@ -3,7 +3,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.ports.Repositories;
 using TodoList.Application.DTOs.Tag;
-using TodoList.Domain.Entities;
 
 namespace TodoList.Api.Controllers;
 
@@ -12,22 +11,17 @@ namespace TodoList.Api.Controllers;
 public class TagController : ControllerBase
 {
     private readonly ITagRepository _tagRepository;
-    private readonly IMapper _mapper;
     private readonly IValidator<TagCreateDTo> _createValidator;
-    private readonly IValidator<TagUpdateDTo> _updateValidator;
 
-    public TagController(ITagRepository tagRepository, IMapper mapper,
-        IValidator<TagCreateDTo> createValidator,
-        IValidator<TagUpdateDTo> updateValidator)
+    public TagController(ITagRepository tagRepository,
+        IValidator<TagCreateDTo> createValidator)
     {
         _tagRepository = tagRepository;
-        _mapper = mapper;
-        _createValidator = _createValidator;
-        _updateValidator = _updateValidator;
+        _createValidator = createValidator;
     }
-
+    
     [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponse<TagDTo>>> GetByIdAsync(int id)
+    public async Task<ActionResult<ApiResponse<TagDTo>>> GetId(int id)
     {
         var tag = await _tagRepository.GetByIdAsync(id);
         if (tag is null)
@@ -64,14 +58,14 @@ public class TagController : ControllerBase
         var response = new ApiResponse<TagCreateDTo> { Data = tagCreateDto };
 
         return CreatedAtAction(
-            actionName: nameof(GetByIdAsync),
+            actionName: nameof(GetId),  
             routeValues: new { id = createdId },
             value: response
         );
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponse<TagUpdateDTo>>> UpdateAsync(int id, TagUpdateDTo tagUpdateDto)
+    public async Task<ActionResult<ApiResponse<TagCreateDTo>>> UpdateAsync(int id, TagCreateDTo tagUpdateDto)
     {
         var existingTag = await _tagRepository.GetByIdAsync(id);
         if (existingTag is null)
@@ -82,17 +76,17 @@ public class TagController : ControllerBase
             });
         }
 
-        var validationResult = await _updateValidator.ValidateAsync(tagUpdateDto);
+        var validationResult = await _createValidator.ValidateAsync(tagUpdateDto);
         if (!validationResult.IsValid)
         {
-            return BadRequest(new ApiResponse<TagUpdateDTo>
+            return BadRequest(new ApiResponse<TagCreateDTo>
             {
                 Errors = validationResult.Errors.Select(e => e.ErrorMessage).ToArray()
             });
         }
 
         await _tagRepository.UpdateAsync(tagUpdateDto);
-        return Ok(new ApiResponse<TagUpdateDTo> { Data = tagUpdateDto });
+        return Ok(new ApiResponse<TagCreateDTo> { Data = tagUpdateDto });
     }
 
     [HttpDelete("{id}")]
@@ -114,7 +108,7 @@ public class TagController : ControllerBase
 
     public class ApiResponse<T>
     {
-        public T Data { get; set; }
-        public IEnumerable<string> Errors { get; set; }
+        public T? Data { get; set; }
+        public IEnumerable<string>? Errors { get; set; }
     }
 }

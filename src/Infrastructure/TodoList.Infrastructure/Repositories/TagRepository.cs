@@ -64,7 +64,7 @@ public class TagRepository: ITagRepository
         return _mapper.Map<TagDTo>(tag);
     }
 
-    public async Task<int> UpdateAsync(TagUpdateDTo  tagUpdateDTo)
+    public async Task<int> UpdateAsync(TagCreateDTo  tagUpdateDTo)
     {
         var tag = _mapper.Map<Tag>(tagUpdateDTo);
         tag.UpdatedAt = DateTime.Now;

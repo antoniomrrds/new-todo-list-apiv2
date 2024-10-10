@@ -1,10 +1,9 @@
 using FluentValidation;
-using TodoList.Application.DTOs;
-using TodoList.Domain.Entities;
+using TodoList.Application.DTOs.Tag;
 
-namespace TodoList.Application.Validators;
+namespace TodoList.Application.Validators.Tag;
 
-public class TagDtoValidator : AbstractValidator<Tag>
+public class TagDtoValidator : AbstractValidator<TagCreateDTo>
 {
     public TagDtoValidator()
     {
@@ -22,3 +21,4 @@ public class TagDtoValidator : AbstractValidator<Tag>
            
     }
 }
+

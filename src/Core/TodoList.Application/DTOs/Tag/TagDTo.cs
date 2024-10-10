@@ -9,12 +9,6 @@ public record TagCreateDTo(
     string Color,
     int Status = DefaultValues.Active);
 
-public record TagUpdateDTo(
-    string? Name,              
-    string? Slug,
-    string? Description,
-    string? Color,
-    int? Status);
 
 public record TagDTo(
     int Id,
