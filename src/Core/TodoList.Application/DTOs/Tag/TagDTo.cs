@@ -16,4 +16,7 @@ public record TagDTo(
     string Slug,
     string Description,
     string Color,
-    int Status);
+    int Status,
+    DateTime  CreatedAt, 
+    DateTime  UpdatedAt 
+    );

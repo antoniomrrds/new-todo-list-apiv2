@@ -8,7 +8,10 @@ public class TagProfile: Profile
 {
     public TagProfile()
     {
-        CreateMap<TagCreateDTo, Tag>();
+        CreateMap<TagCreateDTo, Tag>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         CreateMap<Tag, TagDTo>();
+        CreateMap<Tag, TagCreateDTo>();
     }
 }
