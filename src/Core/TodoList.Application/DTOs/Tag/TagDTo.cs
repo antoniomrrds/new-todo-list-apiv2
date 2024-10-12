@@ -18,8 +18,10 @@ public record TagDTo(
     string Color,
     int Status,
     DateTime CreatedAt,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt
+    )
 {
     public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm");
     public string UpdatedAtFormatted => UpdatedAt.ToString("dd/MM/yyyy HH:mm");
+    
 };

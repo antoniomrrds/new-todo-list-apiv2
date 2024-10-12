@@ -22,13 +22,13 @@ public class TagRepository: ITagRepository
         
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_tag(");
-        sql.AppendLine("       Name,        ");
-        sql.AppendLine("       Color,       ");
-        sql.AppendLine("       Description, ");
-        sql.AppendLine("       Slug,        ");
-        sql.AppendLine("       Status,      ");
-        sql.AppendLine("       Created_At,  ");
-        sql.AppendLine("       Updated_At   ");
+        sql.AppendLine("       NAME,        ");
+        sql.AppendLine("       COLOR,       ");
+        sql.AppendLine("       DESCRIPTION, ");
+        sql.AppendLine("       SLUG,        ");
+        sql.AppendLine("       STATUS,      ");
+        sql.AppendLine("       CREATED_AT,  ");
+        sql.AppendLine("       UPDATED_AT   ");
         sql.AppendLine(") VALUES (");
         sql.AppendLine("       @Name,       ");
         sql.AppendLine("       @Color,      ");
@@ -66,12 +66,12 @@ public class TagRepository: ITagRepository
 
         var sql = new StringBuilder();
         sql.AppendLine("UPDATE tbl_tag                    ");
-        sql.AppendLine("   SET Name = @Name,              ");
-        sql.AppendLine("       Color = @Color,            ");
-        sql.AppendLine("       Description = @Description,");
-        sql.AppendLine("       Slug = @Slug,              ");
-        sql.AppendLine("       Status = @Status,          ");
-        sql.AppendLine("       Updated_At = @UpdatedAt    ");
+        sql.AppendLine("   SET NAME = @Name,              ");
+        sql.AppendLine("       COLOR = @Color,            ");
+        sql.AppendLine("       DESCRIPTION = @Description,");
+        sql.AppendLine("       SLUG = @Slug,              ");
+        sql.AppendLine("       STATUS = @Status,          ");
+        sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
         using var connection = _connectionFactory.Create();
@@ -91,13 +91,13 @@ public class TagRepository: ITagRepository
     {
         var sql = new StringBuilder();
         sql.AppendLine("SELECT ID,          ");
-        sql.AppendLine("       Name,        ");
-        sql.AppendLine("       Color,       ");
-        sql.AppendLine("       Description, ");
-        sql.AppendLine("       Slug,        ");
-        sql.AppendLine("       Status,      ");
-        sql.AppendLine("       Created_At,  ");
-        sql.AppendLine("       Updated_At   ");
+        sql.AppendLine("       NAME         AS Name,");
+        sql.AppendLine("       COLOR        AS Color,");
+        sql.AppendLine("       DESCRIPTION  AS Description,");
+        sql.AppendLine("       SLUG         AS Slug,");
+        sql.AppendLine("       STATUS       AS Status,");
+        sql.AppendLine("       CREATED_AT   AS CreatedAt,");
+        sql.AppendLine("       UPDATED_AT   AS UpdatedAt");
         sql.AppendLine("FROM tbl_tag        ");
         return sql;
     }
