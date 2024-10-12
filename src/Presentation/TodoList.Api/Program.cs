@@ -1,3 +1,4 @@
+using TodoList.Api.Filters;
 using TodoList.Application;
 using TodoList.Infrastructure;
 
@@ -11,7 +12,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddScoped<ValidateModelAttribute>();
 
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidateModelAttribute>();
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
