@@ -1,4 +1,5 @@
 using TodoList.Api.Filters;
+using TodoList.Api.Middlewares;
 using TodoList.Application;
 using TodoList.Infrastructure;
 
@@ -19,6 +20,9 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<ValidateModelAttribute>();
 });
 var app = builder.Build();
+
+// Register the error handling middleware
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

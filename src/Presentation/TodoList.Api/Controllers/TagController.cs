@@ -27,7 +27,7 @@ public class TagController : ControllerBase
         var tag = await _tagRepository.GetByIdAsync(id);
         if (tag is null)
         {
-            return NotFound($"Nenhuma tag encontrada com o id: {id} informado.");
+            return NotFound();
         }
 
         var tagResult = _mapper.Map<TagDTo>(tag);
@@ -48,7 +48,7 @@ public class TagController : ControllerBase
         var tag = _mapper.Map<Tag>(tagCreateDto);
         var createdId = await _tagRepository.CreateAsync(tag);
 
-        var createdTagDto = _mapper.Map<TagDTo>(tag);
+        var createdTagDto = _mapper.Map<TagDTo>(tag) with{ Id = createdId };
         return CreatedAtAction(
             actionName: nameof(GetId),
             routeValues: new { id = createdId },

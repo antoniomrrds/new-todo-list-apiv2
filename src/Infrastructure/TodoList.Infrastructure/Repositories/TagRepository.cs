@@ -40,7 +40,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
         var connection = _connectionFactory.Create();
-        return await connection.ExecuteAsync(sql.ToString(), tag);
+        return await connection.QueryFirstAsync<int>(sql.ToString(), tag);
     }
 
     public async Task<IEnumerable<Tag>> GetAllTagsWithDetailsAsync()
