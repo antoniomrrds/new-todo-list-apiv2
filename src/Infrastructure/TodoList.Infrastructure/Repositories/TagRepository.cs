@@ -39,14 +39,14 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       @UpdatedAt   ");
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        var connection = _connectionFactory.Create();
+        await using var connection = _connectionFactory.Create();
         return await connection.QueryFirstAsync<int>(sql.ToString(), tag);
     }
 
     public async Task<IEnumerable<Tag>> GetAllTagsWithDetailsAsync()
     {
         var sql = GetBaseQuery();
-        using var connection = _connectionFactory.Create();
+        await using var connection = _connectionFactory.Create();
         var tags = await connection.QueryAsync<Tag>(sql.ToString());
         return tags;
     }
@@ -55,7 +55,7 @@ public class TagRepository: ITagRepository
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        using var connection = _connectionFactory.Create();
+        await using var connection = _connectionFactory.Create();
         var tag = await connection.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id });
         return tag;
     }
@@ -74,7 +74,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
-        using var connection = _connectionFactory.Create();
+        await using var connection = _connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), tag);
     }
 
@@ -83,7 +83,7 @@ public class TagRepository: ITagRepository
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_tag");
         sql.AppendLine(" WHERE ID = @Id;");
-        var connection = _connectionFactory.Create();
+        await using var connection = _connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), new { Id = id });
     }
     

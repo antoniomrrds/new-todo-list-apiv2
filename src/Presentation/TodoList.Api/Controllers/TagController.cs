@@ -1,4 +1,7 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Api.Filters;
 using TodoList.Application.DTOs.Tag;
@@ -9,7 +12,6 @@ namespace TodoList.Api.Controllers;
 
 [ApiController]
 [Route("api/tag")]
-[ServiceFilter(typeof(ValidateModelAttribute))]
 public class TagController : ControllerBase
 {
     private readonly ITagRepository _tagRepository;
@@ -43,32 +45,34 @@ public class TagController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<TagDTo>> CreateAsync(TagCreateDTo tagCreateDto)
+    public async Task<ActionResult<TagDTo>> CreateAsync(
+        [FromBody]
+        CreateTagDTo createTagDTo)
     {
-        var tag = _mapper.Map<Tag>(tagCreateDto);
+        var tag = _mapper.Map<Tag>(createTagDTo);
         var createdId = await _tagRepository.CreateAsync(tag);
 
-        var createdTagDto = _mapper.Map<TagDTo>(tag) with{ Id = createdId };
+        var createdTagDTo = _mapper.Map<TagDTo>(tag) with { Id = createdId };
         return CreatedAtAction(
             actionName: nameof(GetId),
             routeValues: new { id = createdId },
-            value: createdTagDto
+            value: createdTagDTo
         );
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TagDTo>> UpdateAsync(int id, TagCreateDTo tagUpdateDto)
+    public async Task<ActionResult<TagDTo>> UpdateAsync(int id, CreateTagDTo updateTagDTo)
     {
-        var existingTag = await _tagRepository.GetByIdAsync(id);
-        if (existingTag is null)
+        var existTag = await _tagRepository.GetByIdAsync(id);
+        if (existTag is null)
         {
             return NotFound();
         }
 
-        _mapper.Map(tagUpdateDto, existingTag);
-        await _tagRepository.UpdateAsync(existingTag);
+        _mapper.Map(updateTagDTo, existTag); 
+       await _tagRepository.UpdateAsync(existTag);
 
-        var tagResponse = _mapper.Map<TagDTo>(existingTag);
+        var tagResponse = _mapper.Map<TagDTo>(existTag);
         return Ok(tagResponse);
     }
 

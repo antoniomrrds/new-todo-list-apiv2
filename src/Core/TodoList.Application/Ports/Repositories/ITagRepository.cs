@@ -1,5 +1,4 @@
-﻿using TodoList.Application.DTOs.Tag;
-using TodoList.Domain.Entities;
+﻿using TodoList.Domain.Entities;
 
 namespace TodoList.Application.ports.Repositories
 {

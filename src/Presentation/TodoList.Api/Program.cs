@@ -15,11 +15,15 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddScoped<ValidateModelAttribute>();
 
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidateModelAttribute>();
 });
+
+
 var app = builder.Build();
+
 
 // Register the error handling middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();

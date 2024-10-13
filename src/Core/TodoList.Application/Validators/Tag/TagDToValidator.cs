@@ -3,9 +3,9 @@ using TodoList.Application.DTOs.Tag;
 
 namespace TodoList.Application.Validators.Tag;
 
-public class TagDtoValidator : AbstractValidator<TagCreateDTo>
+public class TagDToValidator : AbstractValidator<CreateTagDTo>
 {
-    public TagDtoValidator()
+    public TagDToValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("O Nome é obrigatório.")

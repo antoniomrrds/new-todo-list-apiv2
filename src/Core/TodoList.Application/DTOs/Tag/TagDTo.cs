@@ -2,7 +2,7 @@
 
 namespace TodoList.Application.DTOs.Tag;
 
-public record TagCreateDTo(
+public record CreateTagDTo(
     string Name,
     string Slug,
     string Description,

@@ -1,125 +1,94 @@
-using System.Net;
 using AutoMapper;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using TodoList.Application.DTOs;
-using TodoList.Application.ports.Repositories;
+using TodoList.Api.Filters;
+using TodoList.Application.DTOs.Todo;
 using TodoList.Domain.Entities;
 
-namespace TodoList.Api.Controllers;
+using TodoList.Application.ports.Repositories;
 
-[ApiController]
-[Route("api/todo")]
-public class TodoController : ControllerBase
+namespace TodoList.Api.Controllers
 {
-    private readonly ITodoRepository _todoRepository;
-    private readonly IMapper _mapper;
-    private readonly IValidator<TodoDto> _validator;
-
-    public TodoController(ITodoRepository todoRepository, IMapper mapper, IValidator<TodoDto> validator)
+    [ApiController]
+    [Route("api/todo")]
+    public class TodoController : ControllerBase
     {
-        _todoRepository = todoRepository;
-        _mapper = mapper;
-        _validator = validator;
-    }
+        private readonly ITodoRepository _todoRepository;
+        private readonly IMapper _mapper;
 
-    [HttpPost]
-    public async Task<IActionResult> PostAsync(TodoDto createTodoDto)
-    {
-        var validationResult = await _validator.ValidateAsync(createTodoDto);
-
-        if (!validationResult.IsValid)
+        public TodoController(ITodoRepository todoRepository, IMapper mapper)
         {
-            return BadRequest(validationResult.Errors);
+            _todoRepository = todoRepository;
+            _mapper = mapper;
         }
 
-        var todo = _mapper.Map<Todo>(createTodoDto);
-        todo.IsCompleted = false;
-        await _todoRepository.CreateAsync(todo);
-
-        return Ok();
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetTodosAsync()
-    {
-        var todos = await _todoRepository.GetAllAsync();
-        var model = _mapper.Map<IEnumerable<Todo>>(todos);
-        return Ok(model);
-    }
-
-    [HttpGet]
-    [Route("{id}")]
-    public async Task<IActionResult> GetTodoByIdAsync(int id)
-    {
-        var todo = await _todoRepository.GetByIdAsync(id);
-        if (todo is null)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TodoDTo>>> GetTodosAsync()
         {
-            return NotFound(new
+            var todos = await _todoRepository.GetAllAsync();
+            var todosResult = todos.Select(todo => _mapper.Map<TodoDTo>(todo)).ToList();
+            return Ok(todosResult);
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public async Task<ActionResult<TodoDTo>> GetTodoById(int id)
+        {
+            var todo = await _todoRepository.GetByIdAsync(id);
+            if (todo is null)
             {
-                result = new
-                {
-                    message = "Nenhum todo encontrado.",
-                    status = HttpStatusCode.NotFound
-                }
-            });
+                return NotFound();
+            }
+
+            var todoResult = _mapper.Map<TodoDTo>(todo);
+            return Ok(todoResult);
         }
 
-        var model = _mapper.Map<Todo>(todo);
-
-        return Ok(new
+        [HttpPost]
+        public async Task<ActionResult<TodoDTo>> PostAsync([FromBody] CreateTodoDTo createTodoDTo) // Adicione [FromBody]
         {
-            result = model,
-            status = HttpStatusCode.OK
-        });
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutAsync(int id, TodoDto updateTodoDto)
-    {
-        var validationResult = await _validator.ValidateAsync(updateTodoDto);
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.Errors);
-        }
-
-        var todo = await _todoRepository.GetByIdAsync(id);
-        if (todo == null)
-        {
-            return NotFound(new
+            if(!ModelState.IsValid)
             {
-                result = new
-                {
-                    message = "Nenhum todo com o id informado.",
-                    status = HttpStatusCode.NotFound
-                }
-            });
+                return BadRequest(ModelState);
+            }
+            
+            var todo = _mapper.Map<Todo>(createTodoDTo);
+            var createdId = await _todoRepository.CreateAsync(todo);
+            var createdTodoDTo = _mapper.Map<TodoDTo>(todo) with { Id = createdId };
+            return CreatedAtAction(
+                actionName: nameof(GetTodoById),
+                routeValues: new { id = createdId },
+                value: createdTodoDTo
+            );
         }
 
-        var todoToUpdate = _mapper.Map<Todo>(updateTodoDto);
-        todoToUpdate.Id = id;
-        var updated = await _todoRepository.UpdateAsync(todoToUpdate);
-
-        return Ok(updated);
-    }
-
-    [HttpDelete]
-    [Route("{id}")]
-    public async Task<IActionResult> DeleteTodoAsync(int id)
-    {
-        var deleted = await _todoRepository.DeleteAsync(id);
-        if (deleted == 0)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<TodoDTo>> PutAsync(int id, [FromBody] CreateTodoDTo updateTodoDTo) // Adicione [FromBody]
         {
-            return NotFound(new
+            var existTodo = await _todoRepository.GetByIdAsync(id);
+            if (existTodo is null)
             {
-                result = new
-                {
-                    message = "Nenhum todo encontrado.",
-                    status = HttpStatusCode.NotFound
-                }
-            });
+                return NotFound();
+            }
+
+            _mapper.Map(updateTodoDTo, existTodo);
+            await _todoRepository.UpdateAsync(existTodo);
+            
+            var tagResponse = _mapper.Map<TodoDTo>(existTodo);
+            return Ok(tagResponse);
         }
 
-        return Ok();
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<ActionResult> DeleteTodoAsync(int id)
+        {
+            var todo = await _todoRepository.GetByIdAsync(id);
+            if (todo is null)
+            {
+                return NotFound();
+            }
+
+            await _todoRepository.DeleteAsync(id);
+            return NoContent();
+        }
     }
 }
