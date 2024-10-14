@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-
 namespace TodoList.Api.Filters
 {
     public class ValidateModelAttribute : ActionFilterAttribute
@@ -24,7 +23,7 @@ namespace TodoList.Api.Filters
                 return;
             }
 
-            ValidateActionArguments(context);
+            ValidateActionArguments(context).GetAwaiter().GetResult();
         }
 
         private Dictionary<string, List<string>> GetModelStateErrors(ActionExecutingContext context)
@@ -36,12 +35,12 @@ namespace TodoList.Api.Filters
                 foreach (var key in context.ModelState.Keys)
                 {
                     var stateValue = context.ModelState[key];
-                    var conversionErrors = stateValue.Errors
+                    var conversionErrors = stateValue?.Errors
                         .Where(e => e.ErrorMessage.Contains("could not be converted"))
                         .Select(e => $"O valor do campo '{key.Replace("$.", "")}' está errado. Verifique o modelo e tente novamente.")
                         .ToList();
 
-                    if (conversionErrors.Any())
+                    if (conversionErrors != null && conversionErrors.Any())
                     {
                         errors[key.Replace("$.", "")] = conversionErrors;
                     }
@@ -51,7 +50,7 @@ namespace TodoList.Api.Filters
             return errors;
         }
 
-        private void ValidateActionArguments(ActionExecutingContext context)
+        private async Task ValidateActionArguments(ActionExecutingContext context)
         {
             foreach (var arg in context.ActionArguments)
             {
@@ -64,7 +63,7 @@ namespace TodoList.Api.Filters
                     continue;
                 }
 
-                var validationResult = validator.Validate(new ValidationContext<object>(arg.Value));
+                var validationResult = await validator.ValidateAsync(new ValidationContext<object>(arg.Value));
                 if (!validationResult.IsValid)
                 {
                     var errors = ExtractErrors(validationResult);

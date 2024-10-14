@@ -4,6 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DebugType>portable</DebugType>
+        <DebugSymbols>true</DebugSymbols>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,9 +15,4 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Infrastructure\TodoList.Infrastructure\TodoList.Infrastructure.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Controllers\Todo.cs" />
-    </ItemGroup>
-
 </Project>

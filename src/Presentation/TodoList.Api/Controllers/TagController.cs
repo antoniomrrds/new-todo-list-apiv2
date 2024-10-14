@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using TodoList.Api.Filters;
+
 using TodoList.Application.DTOs.Tag;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;

@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using TodoList.Application.DTOs.Todo;
@@ -15,11 +14,6 @@ public static class DependencyInjectionApplication{
         services.AddValidatorsFromAssembly(typeof(DependencyInjectionApplication).Assembly); 
         services.AddScoped<IValidator<CreateTodoDTo>, TodoDToValidator>();
 
-        services.AddFluentValidationAutoValidation(config =>
-        {
-            config.DisableDataAnnotationsValidation = true;
-        });
-        
         services.Configure<ApiBehaviorOptions>(options =>
         {
             options.SuppressModelStateInvalidFilter = true;
