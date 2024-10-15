@@ -2,11 +2,10 @@
 
 namespace TodoList.Application.ports.Repositories
 {
-    public interface ITagRepository
+    public interface ITagRepository: IRepository<Tag>
     {
         Task<int> CreateAsync(Tag tag);
         Task<IEnumerable<Tag>> GetAllTagsWithDetailsAsync();
-        Task<Tag?> GetByIdAsync(int id); 
         Task<int> UpdateAsync(Tag tag); 
         Task<int> DeleteTagByIdAsync(int id); 
     }

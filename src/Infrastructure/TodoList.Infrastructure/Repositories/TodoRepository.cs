@@ -6,7 +6,7 @@ using TodoList.Infrastructure.database;
 
 namespace TodoList.Infrastructure.Repositories;
 
-public class TodoRepository : ITodoRepository
+public class TodoRepository : ITodoRepository, IRepository<Todo>
 {
     private readonly SqlConnectionFactory _connectionFactory;
 
