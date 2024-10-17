@@ -11,7 +11,7 @@ namespace TodoList.Infrastructure
     {
         public static void  AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddSingleton(serviceProvider =>
+            services.AddSingleton(_ =>
             {
                 var connectionString = configuration.GetConnectionString("DefaultConnection")
                                        ?? throw new ApplicationException("Connection string 'DefaultConnection' not found.");
@@ -26,6 +26,7 @@ namespace TodoList.Infrastructure
             
             services.AddTransient<ITodoRepository, TodoRepository>();
             services.AddTransient<ITagRepository, TagRepository>();
+            services.AddTransient<ICategoryRepository, CategoryRepository>();
 
         }
     }
