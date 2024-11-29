@@ -1,6 +1,11 @@
-﻿namespace TodoList.Domain.Entities;
+﻿using TodoList.Domain.Constants;
 
-public class Category: BaseEntity
+namespace TodoList.Domain.Entities;
+
+public sealed class Category: BaseEntity
 {
-    string Name { get; set; } = String.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public int Active { get; set; } = DefaultValues.Active;
+
 }

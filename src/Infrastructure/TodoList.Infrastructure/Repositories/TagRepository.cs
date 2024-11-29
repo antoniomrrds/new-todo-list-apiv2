@@ -9,7 +9,6 @@ namespace TodoList.Infrastructure.Repositories;
 public class TagRepository: ITagRepository
 {
     private readonly SqlConnectionFactory _connectionFactory;
-
     public TagRepository(SqlConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
@@ -26,7 +25,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       COLOR,       ");
         sql.AppendLine("       DESCRIPTION, ");
         sql.AppendLine("       SLUG,        ");
-        sql.AppendLine("       STATUS,      ");
+        sql.AppendLine("       ACTIVE,      ");
         sql.AppendLine("       CREATED_AT,  ");
         sql.AppendLine("       UPDATED_AT   ");
         sql.AppendLine(") VALUES (");
@@ -34,7 +33,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       @Color,      ");
         sql.AppendLine("       @Description,");
         sql.AppendLine("       @Slug,       ");
-        sql.AppendLine("       @Status,     ");
+        sql.AppendLine("       @Active,     ");
         sql.AppendLine("       @CreatedAt,  ");
         sql.AppendLine("       @UpdatedAt   ");
         sql.AppendLine(");");
@@ -70,7 +69,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       COLOR = @Color,            ");
         sql.AppendLine("       DESCRIPTION = @Description,");
         sql.AppendLine("       SLUG = @Slug,              ");
-        sql.AppendLine("       STATUS = @Status,          ");
+        sql.AppendLine("       ACTIVE = @Active,          ");
         sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
@@ -95,10 +94,22 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       COLOR        AS Color,");
         sql.AppendLine("       DESCRIPTION  AS Description,");
         sql.AppendLine("       SLUG         AS Slug,");
-        sql.AppendLine("       STATUS       AS Status,");
+        sql.AppendLine("       ACTIVE       AS Active,");
         sql.AppendLine("       CREATED_AT   AS CreatedAt,");
         sql.AppendLine("       UPDATED_AT   AS UpdatedAt");
         sql.AppendLine("FROM tbl_tag        ");
         return sql;
+    }
+
+    public async Task<bool> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
+    {
+        var tagIds = ids.ToList();
+        if (tagIds.Count == 0) return true;
+
+            const string sql = "SELECT ID FROM tbl_tag WHERE ID IN @TagIds";
+             await using var connection = _connectionFactory.Create();
+             var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds })).ToList();
+
+             return existingTagIds.Count == tagIds.Count;
     }
 }

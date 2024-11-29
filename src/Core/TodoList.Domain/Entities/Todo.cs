@@ -2,10 +2,14 @@ namespace TodoList.Domain.Entities;
 
 public sealed class Todo : BaseEntity
 {
-    public int? IdTag { get; set; }
-    public int? IdCategory { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int Status { get; set; } = Constants.DefaultValues.Active;
-    public bool IsCompleted { get; set; } =  false;
+    public DateTime? ExpirationDate { get; set; }
+    public int Active { get; set; } = Constants.DefaultValues.Active;
+    public bool IsCompleted { get; set; }
+    public string? ExpirationDateFormatted { get;  init; }
+    public string? CreatedAtFormatted { get;  init; }
+    public string? UpdatedAtFormatted { get;  init; }
 }
+
+

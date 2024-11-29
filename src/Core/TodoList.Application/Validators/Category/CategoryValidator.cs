@@ -1,11 +1,11 @@
 using FluentValidation;
-using TodoList.Application.DTOs.Tag;
+using TodoList.Application.DTOs.Category;
 
-namespace TodoList.Application.Validators.Tag;
+namespace TodoList.Application.Validators.Category;
 
-public class TagDToValidator : AbstractValidator<CreateTagDTo>
+public class CategoryValidator: AbstractValidator<CategoryDTo>
 {
-    public TagDToValidator()
+    public CategoryValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("O Nome é obrigatório.")
@@ -17,4 +17,3 @@ public class TagDToValidator : AbstractValidator<CreateTagDTo>
             .InclusiveBetween(0, 1).WithMessage("O Campo Ativo deve ser 0 (inativo) ou 1 (ativo).");
     }
 }
-

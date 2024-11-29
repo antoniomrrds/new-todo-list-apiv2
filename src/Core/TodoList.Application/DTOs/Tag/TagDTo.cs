@@ -4,19 +4,17 @@ namespace TodoList.Application.DTOs.Tag;
 
 public record CreateTagDTo(
     string Name,
-    string Slug,
     string Description,
     string Color,
-    int Status = DefaultValues.Active);
+    int Active = DefaultValues.Active);
 
 
 public record TagDTo(
     int Id,
     string Name,
-    string Slug,
     string Description,
     string Color,
-    int Status,
+    int Active,
     DateTime CreatedAt,
     DateTime UpdatedAt
     )

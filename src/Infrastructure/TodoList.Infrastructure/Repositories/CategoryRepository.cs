@@ -10,7 +10,7 @@ namespace TodoList.Infrastructure.Repositories;
 public class CategoryRepository : ICategoryRepository
 {
     private readonly SqlConnectionFactory _connectionFactory;
-    
+
     public CategoryRepository(SqlConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
@@ -85,5 +85,17 @@ public class CategoryRepository : ICategoryRepository
         sql.AppendLine("       UPDATED_AT      ");
         sql.AppendLine("FROM tbl_category      ");
         return sql;
+    }
+
+    public async Task<bool> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
+    {
+        var categoriesId = ids.ToList();
+        if (categoriesId.Count == 0) return true;
+
+        const string sql = "SELECT ID FROM tbl_category WHERE ID IN @CategoryIds";
+        await using var connection = _connectionFactory.Create();
+        var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { TagIds = categoriesId })).ToList();
+
+        return existingCategoriesIds.Count == categoriesId.Count;
     }
 }

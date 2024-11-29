@@ -1,7 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Todo;
-using TodoList.Domain.Entities;
 using TodoList.Application.ports.Repositories;
 
 namespace TodoList.Api.Controllers
@@ -12,13 +11,11 @@ namespace TodoList.Api.Controllers
     public class TodoController : ControllerBase
     {
         private readonly ITodoRepository _todoRepository;
-        private readonly ITagRepository _tagRepository;
         private readonly IMapper _mapper;
 
-        public TodoController(ITodoRepository todoRepository, IMapper mapper,ITagRepository tagRepository)
+        public TodoController(ITodoRepository todoRepository, IMapper mapper)
         {
             _todoRepository = todoRepository;
-            _tagRepository = tagRepository;
             _mapper = mapper;
         }
 
@@ -44,34 +41,37 @@ namespace TodoList.Api.Controllers
             return Ok(todoResult);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<TodoDTo>> PostAsync(CreateTodoDTo createTodoDTo) 
+        [HttpGet]
+        [Route("tagsandcategories/{id}")]
+        public async Task<ActionResult<TodoWithTagsAndCategoriesDTo>> GetTodoWithTagsAndCategoriesAsync(int id)
         {
-            var todo = _mapper.Map<Todo>(createTodoDTo);
-            var createdId = await _todoRepository.CreateAsync(todo);
-            var createdTodoDTo = _mapper.Map<TodoDTo>(todo) with { Id = createdId };
-            return CreatedAtAction(
-                actionName: nameof(GetTodoById),
-                routeValues: new { id = createdId },
-                value: createdTodoDTo
-            );
+            var result = await _todoRepository.GetTodoWithTagsAndCategoriesAsync(id);
+            return result is null ? NotFound(): Ok(result);
+        }
+        
+        [HttpPost]
+        public async Task<ActionResult> PostAsync(CreateTodoDTo createTodoDTo) 
+        {
+            var createdId = await _todoRepository.CreateAsync(createTodoDTo);
+            
+            return CreatedAtAction(nameof(GetTodoById), new { id = createdId }, null);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<TodoDTo>> PutAsync(int id, CreateTodoDTo createTodoDTo) 
+        public async Task<ActionResult> PutAsync(int id, UpdateTodoDTo updateTodoDTo) 
         {
-            var existTodo = await _todoRepository.GetByIdAsync(id);
+            var existTodo = await _todoRepository.GetTodoWithTagAndCategoryIdsAsync(id);
             if (existTodo is null)
             {
                 return NotFound();
             }
             
+            _mapper.Map(updateTodoDTo, existTodo);
+            existTodo = existTodo with { Id = id };
+            var updatedTodo = _mapper.Map<UpdateTodoDTo>(existTodo);
             
-            _mapper.Map(createTodoDTo, existTodo);
-            await _todoRepository.UpdateAsync(existTodo);
-            
-            var tagResponse = _mapper.Map<TodoDTo>(existTodo);
-            return Ok(tagResponse);
+            await _todoRepository.UpdateAsync(updatedTodo);
+            return Ok();
         }
 
 

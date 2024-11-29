@@ -1,8 +1,9 @@
-﻿
+﻿using TodoList.Domain.Constants;
+using Entities = TodoList.Domain.Entities;
 namespace TodoList.Application.DTOs.Todo;
 
-public record TodoDTo(
-    int Id,
+public record TodoWithTagsAndCategoriesDTo(
+    int Id ,
     string Title,
     string Description,
     bool IsCompleted,
@@ -12,5 +13,7 @@ public record TodoDTo(
     DateTime? ExpirationDate,
     string? ExpirationDateFormatted,
     string? CreatedAtFormatted,
-    string? UpdatedAtFormatted    
-);
+    string? UpdatedAtFormatted,
+    List<Entities.Tag> Tags,
+    List<Entities.Category> Categories
+    );

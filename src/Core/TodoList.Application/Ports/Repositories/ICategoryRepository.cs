@@ -2,10 +2,11 @@
 
 namespace TodoList.Application.ports.Repositories;
 
-public interface ICategoryRepository: IRepository<Category>
+public interface ICategoryRepository: IEntityExistenceChecker
 {
     Task<int> CreateAsync(Category category);
     Task<IEnumerable<Category>> GetAllCategoriesWithDetailsAsync();
     Task<int> UpdateAsync(Category category);
     Task<int> DeleteCategoryByIdAsync(int id);
+    Task<Category?> GetByIdAsync(int id);
 }

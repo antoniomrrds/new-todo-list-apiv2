@@ -1,12 +1,13 @@
-using FluentValidation;
+﻿using FluentValidation;
 using TodoList.Application.DTOs.Todo;
 using TodoList.Application.ports.Repositories;
 
 namespace TodoList.Application.Validators.Todo;
 
-public class TodoDToValidator : AbstractValidator<CreateTodoDTo>
+
+public class UpdateDToValidator : AbstractValidator<UpdateTodoDTo>
 {
-    public TodoDToValidator(ITagRepository tagRepository, ICategoryRepository categoryRepository)
+    public UpdateDToValidator(ITagRepository tagRepository, ICategoryRepository categoryRepository)
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("O título é obrigatório.")

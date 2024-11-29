@@ -1,7 +1,6 @@
-﻿
-namespace TodoList.Application.DTOs.Todo;
+﻿namespace TodoList.Application.DTOs.Todo;
 
-public record TodoDTo(
+public record TodoWithTagAndCategoryIdsDto(
     int Id,
     string Title,
     string Description,
@@ -12,5 +11,6 @@ public record TodoDTo(
     DateTime? ExpirationDate,
     string? ExpirationDateFormatted,
     string? CreatedAtFormatted,
-    string? UpdatedAtFormatted    
-);
+    string? UpdatedAtFormatted,
+    List<int>? IdTags,
+    List<int>? IdCategories);
