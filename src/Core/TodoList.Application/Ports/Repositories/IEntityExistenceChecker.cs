@@ -2,5 +2,5 @@
 
 public interface IEntityExistenceChecker
 {
-    Task<bool> AreAllEntitiesPresentAsync(IEnumerable<int> ids);
+    Task<IEnumerable<int>> AreAllEntitiesPresentAsync(IEnumerable<int> ids);
 }

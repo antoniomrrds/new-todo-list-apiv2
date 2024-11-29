@@ -22,13 +22,34 @@ public class TodoDToValidator : AbstractValidator<CreateTodoDTo>
 
         RuleFor(x => x.Active)
             .InclusiveBetween(0, 1).WithMessage("O Campo Ativo deve ser 0 (inativo) ou 1 (ativo).");
-
         RuleFor(x => x.IdTags)
-            .MustAsync(async (tags, _) => tags == null || tags.Count == 0 ||  await tagRepository.AreAllEntitiesPresentAsync(tags ))
-            .WithMessage("Uma ou mais tags informadas não estão cadastradas. Verifique os IDs das tags.");
+            .MustAsync(async (tags, _) =>
+            {
+                if (tags == null || tags.Count == 0) return true; 
+                var missingTags = await tagRepository.AreAllEntitiesPresentAsync(tags);
+                return !missingTags.Any(); 
+            })
+            .WithMessage((_, tags) =>
+            {
+                var missingTags = tagRepository.AreAllEntitiesPresentAsync((tags ?? [])).Result.ToList();
+                return missingTags.Count != 0
+                    ? $"Uma ou mais tags informadas não estão cadastradas. IDs ausentes: {string.Join(", ", missingTags)}."
+                    : string.Empty;
+            });
 
         RuleFor(x => x.IdCategories)
-            .MustAsync(async (categories, _) => categories == null || categories.Count == 0 || await categoryRepository.AreAllEntitiesPresentAsync(categories))
-            .WithMessage("Uma ou mais categorias informadas não estão cadastradas. Verifique os IDs das categorias.");
+            .MustAsync(async (categories, _) =>
+            {
+                if (categories == null || categories.Count == 0) return true;
+                var missingCategories = await categoryRepository.AreAllEntitiesPresentAsync(categories);
+                return !missingCategories.Any();
+            })
+            .WithMessage((_, categories) =>
+            {
+                var missingCategories = categoryRepository.AreAllEntitiesPresentAsync((categories ?? [])).Result.ToList();
+                return missingCategories.Count != 0
+                    ? $"Uma ou mais categorias informadas não estão cadastradas. IDs ausentes: {string.Join(", ", missingCategories)}."
+                    : string.Empty;
+            });
     }
 }

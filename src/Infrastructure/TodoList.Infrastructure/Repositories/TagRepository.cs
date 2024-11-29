@@ -101,15 +101,17 @@ public class TagRepository: ITagRepository
         return sql;
     }
 
-    public async Task<bool> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
+    public async Task<IEnumerable<int>> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
     {
         var tagIds = ids.ToList();
-        if (tagIds.Count == 0) return true;
+        if (tagIds.Count == 0) return new List<int>();
 
             const string sql = "SELECT ID FROM tbl_tag WHERE ID IN @TagIds";
              await using var connection = _connectionFactory.Create();
              var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds })).ToList();
 
-             return existingTagIds.Count == tagIds.Count;
+             var missingTagIds = tagIds.Except(existingTagIds).ToList();
+
+             return missingTagIds;
     }
 }

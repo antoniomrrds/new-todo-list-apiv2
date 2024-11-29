@@ -87,15 +87,16 @@ public class CategoryRepository : ICategoryRepository
         return sql;
     }
 
-    public async Task<bool> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
+    public async Task<IEnumerable<int>> AreAllEntitiesPresentAsync(IEnumerable<int> ids)
     {
         var categoriesId = ids.ToList();
-        if (categoriesId.Count == 0) return true;
+        if (categoriesId.Count == 0) return  new List<int>();
 
         const string sql = "SELECT ID FROM tbl_category WHERE ID IN @CategoryIds";
         await using var connection = _connectionFactory.Create();
         var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { TagIds = categoriesId })).ToList();
-
-        return existingCategoriesIds.Count == categoriesId.Count;
+        
+        var missingCategoriesIds = categoriesId.Except(existingCategoriesIds).ToList();
+        return missingCategoriesIds;
     }
 }
