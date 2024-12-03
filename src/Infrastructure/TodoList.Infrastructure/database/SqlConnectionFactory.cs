@@ -1,19 +1,16 @@
 using MySql.Data.MySqlClient;
 
-namespace TodoList.Infrastructure.database;
+namespace TodoList.Infrastructure.DataBase;
 
-public class SqlConnectionFactory
+public interface IDbConnectionFactory
 {
-    private readonly string _connectionString;
-    
-    public SqlConnectionFactory(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
-    
+    MySqlConnection Create();
+}
+
+public class SqlConnectionFactory(string connectionString) : IDbConnectionFactory
+{
     public MySqlConnection Create()
     {
-        return new MySqlConnection(_connectionString);
+        return new MySqlConnection(connectionString);
     }
-    
 }

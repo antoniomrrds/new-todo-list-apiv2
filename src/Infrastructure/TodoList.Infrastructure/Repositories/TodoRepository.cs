@@ -5,148 +5,142 @@ using TodoList.Application.Constants;
 using TodoList.Application.DTOs.Todo;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
-using TodoList.Infrastructure.database;
 
 namespace TodoList.Infrastructure.Repositories;
 
-public class TodoRepository : ITodoRepository
+public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepository
 {
-    private readonly SqlConnectionFactory _connectionFactory;
+  public async Task<int> CreateAsync(CreateTodoDTo createTodoDTo)
+  {
+    createTodoDTo.SetDateOfCreation();
 
-    public TodoRepository(SqlConnectionFactory connectionFactory)
+    var sql = new StringBuilder();
+    sql.AppendLine("INSERT INTO tbl_todo(                  ");
+    sql.AppendLine("       TITLE,                          ");
+    sql.AppendLine("       DESCRIPTION,                    ");
+    sql.AppendLine("       IS_COMPLETED,                   ");
+    sql.AppendLine("       ACTIVE,                         ");
+    sql.AppendLine("       CREATED_AT,                     ");
+    sql.AppendLine("       UPDATED_AT,                     ");
+    sql.AppendLine("       EXPIRATION_DATE                 ");
+    sql.AppendLine(") VALUES (                             ");
+    sql.AppendLine("       @Title,                         ");
+    sql.AppendLine("       @Description,                   ");
+    sql.AppendLine("       @IsCompleted,                   ");
+    sql.AppendLine("       @Active,                        ");
+    sql.AppendLine("       @CreatedAt,                     ");
+    sql.AppendLine("       @UpdatedAt,                     ");
+    sql.AppendLine("       @ExpirationDate                 ");
+    sql.AppendLine(");                                     ");
+    sql.AppendLine("SELECT LAST_INSERT_ID();               ");
+
+    return await databaseExecutor.ExecuteWithTransactionAsync(async (connection, transaction) =>
     {
-        _connectionFactory = connectionFactory;
-    }
+      var taskId = await connection.ExecuteScalarAsync<int>(sql.ToString(), createTodoDTo);
+      await InsertTagsAndCategoriesAsync(taskId, createTodoDTo.IdTags, createTodoDTo.IdCategories, connection, transaction);
+      return taskId;
+    });
+  }
 
-    public async Task<int> CreateAsync(CreateTodoDTo createTodoDTo)
+
+  public async Task<IEnumerable<Todo>> GetAllAsync()
+  {
+    var sql = GetBaseQuery();
+    sql.AppendLine("ORDER BY TD.CREATED_AT DESC;");
+
+    return await databaseExecutor.ExecuteAsync<IEnumerable<Todo>>(async
+        con => await con.QueryAsync<Todo>(sql.ToString()));
+  }
+
+  public async Task<TodoWithTagAndCategoryIdsDto> GetTodoWithTagAndCategoryIdsAsync(int id)
+  {
+    var query = GetCombinedQuery();
+
+    return await databaseExecutor.ExecuteAsync<TodoWithTagAndCategoryIdsDto>(async connection =>
     {
-        var todoWithDates = createTodoDTo with
-        {
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        };
+      await using var multi = await connection.QueryMultipleAsync(query.ToString(), new { TodoId = id, Id = id });
 
-        var sql = new StringBuilder();
-        sql.AppendLine("INSERT INTO tbl_todo(                  ");
-        sql.AppendLine("       TITLE,                          ");
-        sql.AppendLine("       DESCRIPTION,                    ");
-        sql.AppendLine("       IS_COMPLETED,                   ");
-        sql.AppendLine("       ACTIVE,                         ");
-        sql.AppendLine("       CREATED_AT,                     ");
-        sql.AppendLine("       UPDATED_AT,                     ");
-        sql.AppendLine("       EXPIRATION_DATE                 ");
-        sql.AppendLine(") VALUES (                             ");
-        sql.AppendLine("       @Title,                         ");
-        sql.AppendLine("       @Description,                   ");
-        sql.AppendLine("       @IsCompleted,                   ");
-        sql.AppendLine("       @Active,                        ");
-        sql.AppendLine("       @CreatedAt,                     ");
-        sql.AppendLine("       @UpdatedAt,                     ");
-        sql.AppendLine("       @ExpirationDate                 ");
-        sql.AppendLine(");                                     ");
-        sql.AppendLine("SELECT LAST_INSERT_ID();               ");
+      var todo = await multi.ReadSingleOrDefaultAsync<Todo>();
+      var tags = (await multi.ReadAsync<Tag>()).ToList();
+      var categories = (await multi.ReadAsync<Category>()).ToList();
 
-        await using var connection = _connectionFactory.Create();
-        var taskId = await connection.ExecuteScalarAsync<int>(sql.ToString() ,todoWithDates);
+      if (todo is null)
+      {
+        return new TodoWithTagAndCategoryIdsDto
+              .Builder(DefaultValues.IdNullValue, string.Empty, 
+                string.Empty, [],[])
+          .Build();
+      }
 
-        await InsertTagsAndCategoriesAsync(taskId, todoWithDates.IdTags, todoWithDates.IdCategories, connection);
+      var tagAndCategoryIds = new TagAndCategoryFieldsDTo
+      {
+        IdCategories = categories.Select(c => c.Id).ToList(),
+        IdTags = tags.Select(t => t.Id).ToList()
+      };
 
-        return taskId;
-    }
+      return new TodoWithTagAndCategoryIdsDto
+          .Builder(todo.Id, todo.Title, todo.Description, tagAndCategoryIds.IdTags,
+              tagAndCategoryIds.IdCategories)
+          .SetActive(todo.Active)
+          .SetIsCompleted(todo.IsCompleted)
+          .SetCreatedAt(todo.CreatedAt)
+          .SetUpdatedAt(todo.UpdatedAt)
+          .SetExpirationDate(todo.ExpirationDate)
+          .WithFormattedDates(todo.ExpirationDateFormatted, todo.CreatedAtFormatted, todo.UpdatedAtFormatted)
+          .Build();
+    });
+  }
 
 
-    public async Task<IEnumerable<Todo>> GetAllAsync()
+  public async Task<TodoWithTagsAndCategoriesDTo> GetTodoWithTagsAndCategoriesAsync(int id)
+  {
+    var query = GetCombinedQuery();
+
+    return await databaseExecutor.ExecuteAsync<TodoWithTagsAndCategoriesDTo>(async con =>
     {
-        var sql = GetBaseQuery();
-        sql.AppendLine("ORDER BY TD.CREATED_AT DESC;");
-        await using var connection = _connectionFactory.Create();
-        return await connection.QueryAsync<Todo>(sql.ToString());
-    }
+      await using var multi = await con.QueryMultipleAsync(query.ToString(), new { TodoId = id, Id = id });
 
-    
-    public async Task<TodoWithTagAndCategoryIdsDto?> GetTodoWithTagAndCategoryIdsAsync(int id)
-    {
-        var query = GetCombinedQuery();
+      var todo = await multi.ReadSingleOrDefaultAsync<Todo>();
+      var tags = (await multi.ReadAsync<Tag>()).ToList();
+      var categories = (await multi.ReadAsync<Category>()).ToList();
 
-        await using var connection = _connectionFactory.Create();
+      if (todo == null) return new TodoWithTagsAndCategoriesDTo();
 
-        // Executa as consultas em paralelo (simultaneamente)
-        await using var multi = await connection.QueryMultipleAsync(query.ToString(), new { TodoId = id, Id = id });
+      return new TodoWithTagsAndCategoriesDTo
+      {
+        Id = todo.Id,
+        Title = todo.Title,
+        Description = todo.Description,
+        IsCompleted = todo.IsCompleted,
+        Active = todo.Active,
+        CreatedAt = todo.CreatedAt,
+        UpdatedAt = todo.UpdatedAt,
+        ExpirationDate = todo.ExpirationDate,
+        ExpirationDateFormatted = todo.ExpirationDateFormatted,
+        CreatedAtFormatted = todo.CreatedAtFormatted,
+        UpdatedAtFormatted = todo.UpdatedAtFormatted,
+        Tags = tags,
+        Categories = categories
+      };
+    });
+  }
 
-        var todo = await multi.ReadSingleOrDefaultAsync<Todo>();
 
-        var tags = (await multi.ReadAsync<Tag>()).ToList();
+  public async Task<Todo> GetByIdAsync(int id)
+  {
+    var sql = GetBaseQuery();
+    sql.AppendLine("WHERE TD.ID = @id;");
 
-        var categories = (await multi.ReadAsync<Category>()).ToList();
+    var todo = await databaseExecutor.ExecuteAsync<Todo>(async con =>
+      await con.QueryFirstOrDefaultAsync<Todo>(sql.ToString(), new { id }) ?? new Todo());
 
-        if (todo == null) return null;
-        var todoWithTagsAndCategoriesResponse = new TodoWithTagAndCategoryIdsDto(
-            todo.Id,
-            todo.Title,
-            todo.Description,
-            todo.IsCompleted,
-            todo.Active,
-            todo.CreatedAt,
-            todo.UpdatedAt,
-            todo.ExpirationDate,
-            todo.ExpirationDateFormatted,
-            todo.CreatedAtFormatted,
-            todo.UpdatedAtFormatted,
-            tags.Select(t => t.Id).ToList(),
-            categories.Select(c => c.Id).ToList()
-        );
-        return todoWithTagsAndCategoriesResponse;
-    }
-    
-    public async Task<TodoWithTagsAndCategoriesDTo?> GetTodoWithTagsAndCategoriesAsync(int id)
-    {
-        var query = GetCombinedQuery();
+    return todo;
+  }
+  
 
-        await using var connection = _connectionFactory.Create();
-
-        // Executa as consultas em paralelo (simultaneamente)
-        await using var multi = await connection.QueryMultipleAsync(query.ToString(), new { TodoId = id, Id = id });
-
-        var todo = await multi.ReadSingleOrDefaultAsync<Todo>();
-
-        var tags = (await multi.ReadAsync<Tag>()).ToList();
-
-        var categories = (await multi.ReadAsync<Category>()).ToList();
-
-        if (todo == null) return null;
-        var todoWithTagsAndCategoriesResponse = new TodoWithTagsAndCategoriesDTo(
-            todo.Id,
-            todo.Title,
-            todo.Description,
-            todo.IsCompleted,
-            todo.Active,
-            todo.CreatedAt,
-            todo.UpdatedAt,
-            todo.ExpirationDate,
-            todo.ExpirationDateFormatted,
-            todo.CreatedAtFormatted,
-            todo.UpdatedAtFormatted,
-            tags,
-            categories
-        );
-        return todoWithTagsAndCategoriesResponse;
-    }
-
-    public async Task<Todo?> GetByIdAsync(int id)
-    {
-        var sql = GetBaseQuery();
-        sql.AppendLine("WHERE t.ID = @id;");
-    
-        await using var connection = _connectionFactory.Create();
-        return await connection.QueryFirstOrDefaultAsync<Todo>(sql.ToString(), new { id });
-    }
-
-   public async Task<int> UpdateAsync(UpdateTodoDTo updateTodoDTo)
-{
-    var updatedTodo = updateTodoDTo with
-    {
-        UpdatedAt = DateTime.Now
-    };
+  public async Task<int> UpdateAsync(UpdateTodoDTo updateTodoDTo)
+  {
+    updateTodoDTo.UpdatedAt = DateTime.Now;
 
     var updateTodoSql = new StringBuilder();
     updateTodoSql.AppendLine("UPDATE tbl_todo SET                       ");
@@ -158,150 +152,170 @@ public class TodoRepository : ITodoRepository
     updateTodoSql.AppendLine("       EXPIRATION_DATE = @ExpirationDate  ");
     updateTodoSql.AppendLine("WHERE ID = @Id;                           ");
 
-    await using var connection = _connectionFactory.Create();
-    var result = await connection.ExecuteAsync(updateTodoSql.ToString(), updatedTodo);
-
-    var existingTags = await GetExistingTags(updateTodoDTo.Id, connection);
-    var existingCategories = await GetExistingCategories(updateTodoDTo.Id, connection);
-
-    var tagsToAdd = (updatedTodo.IdTags ?? []).Except(existingTags).ToList();
-    var tagsToRemove = existingTags.Except(updatedTodo.IdTags ?? []).ToList();
-
-    if (updatedTodo.IdCategories == null) return result;
-    var categoriesToAdd = (updatedTodo.IdCategories ?? []).Except(existingCategories).ToList();
-    var categoriesToRemove = existingCategories.Except(updatedTodo.IdCategories ?? []).ToList();
-
-    if (tagsToRemove.Count != 0)
+    return await databaseExecutor.ExecuteWithTransactionAsync(async (connection, transaction) =>
     {
-        const string deleteTagsSql = "DELETE FROM tbl_todo_tag WHERE ID_TODO = @Id AND ID_TAG IN @TagsToRemove";
-        await connection.ExecuteAsync(deleteTagsSql, new { updatedTodo.Id, TagsToRemove = tagsToRemove });
+      var result = await connection.ExecuteAsync(updateTodoSql.ToString(), updateTodoDTo, transaction);
+
+      var existingTagsAndCategories = await GetExistingTagsAndCategories(updateTodoDTo.Id, connection);
+
+      var tagsToAdd = updateTodoDTo.IdTags?.Except(existingTagsAndCategories.IdTags ?? []).ToList() ?? [];
+      var tagsToRemove = existingTagsAndCategories.IdTags?.Except(updateTodoDTo.IdTags ?? []).ToList() ?? [];
+
+      var categoriesToAdd =
+          updateTodoDTo.IdCategories?.Except(existingTagsAndCategories.IdCategories ?? []).ToList() ?? [];
+      var categoriesToRemove =
+          existingTagsAndCategories.IdCategories?.Except(updateTodoDTo.IdCategories ?? []).ToList() ?? [];
+
+      if (tagsToRemove.Count != 0)
+      {
+        await DeleteItemsFromRelationshipTableAsync(updateTodoDTo.Id, tagsToRemove, "tbl_todo_tag", "ID_TAG", connection, transaction);
+      }
+
+      if (categoriesToRemove.Count != 0)
+      {
+        await DeleteItemsFromRelationshipTableAsync(updateTodoDTo.Id, categoriesToRemove, "tbl_todo_category", "ID_CATEGORY", connection, transaction);
+      }
+
+      await InsertTagsAndCategoriesAsync(updateTodoDTo.Id, tagsToAdd, categoriesToAdd, connection, transaction);
+
+      return result;
+    });
+  }
+
+  private static async Task<TagAndCategoryFieldsDTo> GetExistingTagsAndCategories(int todoId, IDbConnection connection)
+  {
+    var sql = new StringBuilder();
+    sql.AppendLine("SELECT ID_TAG as IdTag FROM tbl_todo_tag WHERE ID_TODO = @TodoId;");
+    sql.AppendLine();
+    sql.AppendLine("SELECT ID_CATEGORY AS IdCategory FROM tbl_todo_category WHERE ID_TODO = @TodoId;");
+
+    await using var multi = await connection.QueryMultipleAsync(sql.ToString(), new { TodoId = todoId });
+
+    // Ler múltiplos valores de tags
+    var tags = await multi.ReadAsync<int>();
+
+    // Ler múltiplos valores de categorias
+    var categories = await multi.ReadAsync<int>();
+
+    return new TagAndCategoryFieldsDTo { IdCategories = categories.ToList(), IdTags = tags.ToList() };
+  }
+  
+  private static async Task DeleteItemsFromRelationshipTableAsync(int taskId, IEnumerable<int>? items, string tableName, string columnName, IDbConnection connection, IDbTransaction transaction)
+  {
+    var itemList = items?.ToList();
+    if (itemList?.Count != DefaultValues.Inactive)
+    {
+      var deleteQuery = $"DELETE FROM {tableName} WHERE ID_TODO = @TaskId AND {columnName} IN @Items";
+      await connection.ExecuteAsync(deleteQuery, new { TaskId = taskId, Items = itemList }, transaction);
+    }
+  }
+
+  private static async Task InsertTagsAndCategoriesAsync(int taskId, IEnumerable<int>? tags, IEnumerable<int>? categories, IDbConnection connection, IDbTransaction transaction)
+  {
+    await InsertItemsInBulkMySqlAsync(taskId, tags, "tbl_todo_tag", "ID_TAG", connection, transaction);
+    await InsertItemsInBulkMySqlAsync(taskId, categories, "tbl_todo_category", "ID_CATEGORY", connection, transaction);
+  }
+
+  private static async Task InsertItemsInBulkMySqlAsync(
+    int taskId,
+    IEnumerable<int>? items,
+    string tableName,
+    string columnName,
+    IDbConnection connection,
+    IDbTransaction transaction)
+  {
+    var itemsList = items?.ToList();
+    if (itemsList == null || itemsList.Count == DefaultValues.Inactive)
+      return;
+
+
+    var queryBuilder = new StringBuilder();
+    queryBuilder.AppendLine($"INSERT INTO {tableName} (ID_TODO, {columnName}) VALUES ");
+
+    var parameters = new DynamicParameters();
+
+    for (var i = 0; i < itemsList.Count; i++)
+    {
+      if (i > 0)
+        queryBuilder.Append(", ");  
+      queryBuilder.Append($"(@TaskId{i}, @ItemId{i})");
+      parameters.Add($"TaskId{i}", taskId);
+      parameters.Add($"ItemId{i}", itemsList[i]);
     }
 
-    if (categoriesToRemove.Count != 0)
-    {
-        const string deleteCategoriesSql =
-            "DELETE FROM tbl_todo_category WHERE ID_TODO = @Id AND ID_CATEGORY IN @CategoriesToRemove";
-        await connection.ExecuteAsync(deleteCategoriesSql,
-            new { updatedTodo.Id, CategoriesToRemove = categoriesToRemove });
-    }
+    queryBuilder.Append(';');
 
-    await InsertTagsAndCategoriesAsync(updatedTodo.Id, tagsToAdd, categoriesToAdd, connection);
+    await connection.ExecuteAsync(queryBuilder.ToString(), parameters, transaction);
+  }
 
-    return result;
-}
+  public async Task<int> DeleteAsync(int id)
+  {
+    const string sql = "DELETE FROM tbl_todo WHERE ID = @Id";
 
+    return await databaseExecutor.ExecuteAsync(async connection => await connection.ExecuteAsync(sql, new { Id = id }));
+  }
 
-    public async Task<int> DeleteAsync(int id)
-    {
-        await using var connection = _connectionFactory.Create();
-        const string sql = "DELETE FROM tbl_todo WHERE ID = @Id";
-        return await connection.ExecuteAsync(sql, new { Id = id });
-    }
+  private static StringBuilder GetBaseQuery()
+  {
+    var sql = new StringBuilder();
+    sql.AppendLine("SELECT TD.ID                                 AS Id,                            ");
+    sql.AppendLine("       TD.TITLE                              AS Title,                         ");
+    sql.AppendLine("       TD.DESCRIPTION                        AS Description,                   ");
+    sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                   ");
+    sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                ");
+    sql.AppendLine("       TD.ACTIVE                             AS Active,                        ");
+    sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                     ");
+    sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                     ");
+    sql.AppendLine("DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
+    sql.AppendLine("DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
+    sql.AppendLine("DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
+    sql.AppendLine("FROM tbl_todo TD                                                               ");
+    return sql;
+  }
 
+  private static StringBuilder GetTagsQuery()
+  {
+    var sql = new StringBuilder();
+    sql.AppendLine("SELECT TG.ID          AS Id,                ");
+    sql.AppendLine("       TG.NAME        AS Name,              ");
+    sql.AppendLine("       TG.COLOR       AS Color,             ");
+    sql.AppendLine("       TG.DESCRIPTION AS Description,       ");
+    sql.AppendLine("       TG.ACTIVE      AS Active,            ");
+    sql.AppendLine("       TG.CREATED_AT  AS CreatedAt,         ");
+    sql.AppendLine("       TG.UPDATED_AT  AS UpdatedAt          ");
+    sql.AppendLine("FROM tbl_tag TG                             ");
+    sql.AppendLine("JOIN tbl_todo_tag TTG ON TTG.ID_TAG = TG.ID ");
+    sql.AppendLine("WHERE TTG.ID_TODO = @TodoId;                 ");
+    // sql.AppendLine($"AND TG.ACTIVE = {DefaultValues.Active};    ");
+    return sql;
+  }
 
-    private async Task InsertTagsAndCategoriesAsync(int taskId, IEnumerable<int>? tags, IEnumerable<int>? categories,
-        IDbConnection connection)
-    {
-        var tagList = tags?.ToList();
-        var categoryList = categories?.ToList();
+  private static StringBuilder GetCategoriesQuery()
+  {
+    var sql = new StringBuilder();
+    sql.AppendLine("SELECT C.ID          AS Id,                           ");
+    sql.AppendLine("       C.NAME        AS Name,                         ");
+    sql.AppendLine("       C.DESCRIPTION AS Description,                  ");
+    sql.AppendLine("       C.ACTIVE      AS Active,                       ");
+    sql.AppendLine("       C.CREATED_AT  AS CreatedAt,                    ");
+    sql.AppendLine("       C.UPDATED_AT  AS UpdatedAt                     ");
+    sql.AppendLine("FROM tbl_category C                                   ");
+    sql.AppendLine("JOIN tbl_todo_category TTC ON TTC.ID_CATEGORY = C.ID  ");
+    sql.AppendLine("WHERE TTC.ID_TODO = @TodoId;                           ");
+    // sql.AppendLine($"AND C.ACTIVE = {DefaultValues.Active};              ");
+    return sql;
+  }
 
-        if (tagList != null && tagList.Count != 0)
-        {
-            foreach (var tagId in tagList)
-            {
-                await connection.ExecuteAsync(
-                    "INSERT INTO tbl_todo_tag (ID_TODO, ID_TAG) VALUES (@TaskId, @TagId);",
-                    new { TaskId = taskId, TagId = tagId });
-            }
-        }
-
-        if (categoryList != null && categoryList.Count != 0)
-        {
-            foreach (var categoryId in categoryList)
-            {
-                await connection.ExecuteAsync(
-                    "INSERT INTO tbl_todo_category (ID_TODO, ID_CATEGORY) VALUES (@TaskId, @CategoryId);",
-                    new { TaskId = taskId, CategoryId = categoryId });
-            }
-        }
-    }
-
-    private async Task<List<int>> GetExistingTags(int todoId, IDbConnection connection)
-    {
-        const string sql = "SELECT ID_TAG FROM tbl_todo_tag WHERE ID_TODO = @TodoId";
-        var tags = await connection.QueryAsync<int>(sql, new { TodoId = todoId });
-        return tags.ToList();
-    }
-
-
-    private async Task<List<int>> GetExistingCategories(int todoId, IDbConnection connection)
-    {
-        const string sql = "SELECT ID_CATEGORY FROM tbl_todo_category WHERE ID_TODO = @TodoId";
-        var categories = await connection.QueryAsync<int>(sql, new { TodoId = todoId });
-        return categories.ToList();
-    }
-
-    private static StringBuilder GetBaseQuery()
-    {
-        var sql = new StringBuilder();
-        sql.AppendLine("SELECT TD.ID                                 AS Id,                            ");
-        sql.AppendLine("       TD.TITLE                              AS Title,                         ");
-        sql.AppendLine("       TD.DESCRIPTION                        AS Description,                   ");
-        sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                   ");
-        sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                ");
-        sql.AppendLine("       TD.ACTIVE                             AS Active,                        ");
-        sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                     ");
-        sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                     ");
-        sql.AppendLine("DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
-        sql.AppendLine("DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
-        sql.AppendLine("DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
-        sql.AppendLine("FROM tbl_todo TD                                                               ");
-        return sql;
-    }
-
-    private static StringBuilder GetTagsQuery()
-    {
-        var sql = new StringBuilder();
-        sql.AppendLine("SELECT TG.ID          AS Id,                ");
-        sql.AppendLine("       TG.NAME        AS Name,              ");
-        sql.AppendLine("       TG.COLOR       AS Color,             ");
-        sql.AppendLine("       TG.DESCRIPTION AS Description,       ");
-        sql.AppendLine("       TG.ACTIVE      AS Active,            ");
-        sql.AppendLine("       TG.CREATED_AT  AS CreatedAt,         ");
-        sql.AppendLine("       TG.UPDATED_AT  AS UpdatedAt          ");
-        sql.AppendLine("FROM tbl_tag TG                             ");
-        sql.AppendLine("JOIN tbl_todo_tag TTG ON TTG.ID_TAG = TG.ID ");
-        sql.AppendLine("WHERE TTG.ID_TODO = @TodoId                ");
-        sql.AppendLine($"AND TG.ACTIVE = {DefaultValues.Active};    ");
-        return sql;
-    }
-
-    private static StringBuilder GetCategoriesQuery()
-    {
-        var sql = new StringBuilder();
-        sql.AppendLine("SELECT C.ID          AS Id,                          ");
-        sql.AppendLine("       C.NAME        AS Name,                        ");
-        sql.AppendLine("       C.DESCRIPTION AS Description,                 ");
-        sql.AppendLine("       C.ACTIVE      AS Active,                      ");
-        sql.AppendLine("       C.CREATED_AT  AS CreatedAt,                   ");
-        sql.AppendLine("       C.UPDATED_AT  AS UpdatedAt                    ");
-        sql.AppendLine("FROM tbl_category C                                  ");
-        sql.AppendLine("JOIN tbl_todo_category TTC ON TTC.ID_CATEGORY = C.ID  ");
-        sql.AppendLine("WHERE TTC.ID_TODO = @TodoId                          ");
-        sql.AppendLine($"AND C.ACTIVE = {DefaultValues.Active};              ");
-        return sql;
-    }
-
-    private static StringBuilder GetCombinedQuery()
-    {
-        var sql = new StringBuilder();
-        sql.Append(GetBaseQuery());
-        sql.AppendLine("WHERE TD.ID = @Id");
-        sql.AppendLine($"AND TD.ACTIVE = {DefaultValues.Active};");
-        sql.AppendLine();
-        sql.Append(GetTagsQuery());
-        sql.AppendLine();
-        sql.Append(GetCategoriesQuery());
-        return sql;
-    }
+  private static StringBuilder GetCombinedQuery()
+  {
+    var sql = new StringBuilder();
+    sql.Append(GetBaseQuery());
+    sql.AppendLine("WHERE TD.ID = @Id;");
+    // sql.AppendLine($"AND TD.ACTIVE = {DefaultValues.Active};");
+    sql.AppendLine();
+    sql.Append(GetTagsQuery());
+    sql.AppendLine();
+    sql.Append(GetCategoriesQuery());
+    return sql;
+  }
 }

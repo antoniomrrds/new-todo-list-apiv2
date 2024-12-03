@@ -2,29 +2,25 @@ CREATE DATABASE IF NOT EXISTS db_todo_list;
 
 USE db_todo_list;
 
--- Creating the tags table
 CREATE TABLE IF NOT EXISTS tbl_tag (
     ID           SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     NAME         VARCHAR(255) NOT NULL,
     DESCRIPTION  VARCHAR(500) DEFAULT NULL,
-    ACTIVE       TINYINT(1) DEFAULT 1,         
+    ACTIVE       TINYINT(1) DEFAULT 1,
     COLOR        VARCHAR(7) DEFAULT '#FFFFFF',
     CREATED_AT   DATETIME NOT NULL,
     UPDATED_AT   DATETIME NOT NULL
-);
+    );
 
--- Creating the categories table
 CREATE TABLE IF NOT EXISTS tbl_category (
-    ID          SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,  
-    NAME        VARCHAR(255) NOT NULL UNIQUE,                  
-    DESCRIPTION VARCHAR(500) DEFAULT NULL,                    
-    ACTIVE      TINYINT(1) DEFAULT 1,                         
-    CREATED_AT  DATETIME NOT NULL,                            
-    UPDATED_AT  DATETIME NOT NULL                             
-);
+    ID          SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    NAME        VARCHAR(255) NOT NULL UNIQUE,
+    DESCRIPTION VARCHAR(500) DEFAULT NULL,
+    ACTIVE      TINYINT(1) DEFAULT 1,
+    CREATED_AT  DATETIME NOT NULL,
+    UPDATED_AT  DATETIME NOT NULL
+    );
 
-
--- Creating the tasks (todos) table
 CREATE TABLE IF NOT EXISTS tbl_todo (
     ID              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     TITLE           VARCHAR(255) NOT NULL,
@@ -33,23 +29,23 @@ CREATE TABLE IF NOT EXISTS tbl_todo (
     CREATED_AT      DATETIME NOT NULL,
     UPDATED_AT      DATETIME NOT NULL,
     EXPIRATION_DATE DATETIME DEFAULT NULL,
-    ACTIVE          TINYINT(1) DEFAULT 1  
-);
+    ACTIVE          TINYINT(1) DEFAULT 1
+    );
 
--- Relationship table between tasks and tags (N:N)
 CREATE TABLE IF NOT EXISTS tbl_todo_tag (
-    ID_TODO     INT UNSIGNED,
-    ID_TAG      SMALLINT UNSIGNED,
-    PRIMARY KEY (ID_TODO, ID_TAG),
+    ID          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,  
+    ID_TODO     INT UNSIGNED,                             
+    ID_TAG      SMALLINT UNSIGNED,                        
+    CONSTRAINT UNIQ_TODO_TAG UNIQUE (ID_TODO, ID_TAG),    
     FOREIGN KEY (ID_TODO) REFERENCES tbl_todo (ID) ON DELETE CASCADE,
     FOREIGN KEY (ID_TAG) REFERENCES tbl_tag (ID) ON DELETE CASCADE
-);
+    );
 
--- Relationship table between tasks and categories (N:N)
 CREATE TABLE IF NOT EXISTS tbl_todo_category (
-    ID_TODO     INT UNSIGNED,
-    ID_CATEGORY SMALLINT UNSIGNED,
-    PRIMARY KEY (ID_TODO, ID_CATEGORY),
+    ID          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,  
+    ID_TODO     INT UNSIGNED,                             
+    ID_CATEGORY SMALLINT UNSIGNED,                        
+    CONSTRAINT UNIQ_TODO_CATEGORY UNIQUE (ID_TODO, ID_CATEGORY), 
     FOREIGN KEY (ID_TODO) REFERENCES tbl_todo (ID) ON DELETE CASCADE,
     FOREIGN KEY (ID_CATEGORY) REFERENCES tbl_category (ID) ON DELETE CASCADE
 );

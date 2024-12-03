@@ -2,90 +2,69 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Todo;
 using TodoList.Application.ports.Repositories;
+using TodoList.Domain.Constants;
 
 namespace TodoList.Api.Controllers
 {
     [ApiController]
     [Route("api/todo")]
 
-    public class TodoController : ControllerBase
+    public class TodoController(ITodoRepository todoRepository, IMapper mapper) : ControllerBase
     {
-        private readonly ITodoRepository _todoRepository;
-        private readonly IMapper _mapper;
-
-        public TodoController(ITodoRepository todoRepository, IMapper mapper)
-        {
-            _todoRepository = todoRepository;
-            _mapper = mapper;
-        }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TodoDTo>>> GetTodosAsync()
         {
-            var todos = await _todoRepository.GetAllAsync();
-            var todosResult = todos.Select(todo => _mapper.Map<TodoDTo>(todo)).ToList();
+            var todos = await todoRepository.GetAllAsync();
+            var todosResult = todos.Select(mapper.Map<TodoDTo>).ToList();
             return Ok(todosResult);
         }
 
         [HttpGet]
-        [Route("{id}")]
+        [Route("{id:int}")]
         public async Task<ActionResult<TodoDTo>> GetTodoById(int id)
         {
-            var todo = await _todoRepository.GetByIdAsync(id);
-            if (todo is null)
-            {
-                return NotFound();
-            }
-
-            var todoResult = _mapper.Map<TodoDTo>(todo);
+            var todo = await todoRepository.GetByIdAsync(id);
+            if (todo.Id == DefaultValues.IdNullValue)  return NotFound();
+            var todoResult = mapper.Map<TodoDTo>(todo);
             return Ok(todoResult);
         }
-
+            
         [HttpGet]
-        [Route("tagsandcategories/{id}")]
-        public async Task<ActionResult<TodoWithTagsAndCategoriesDTo>> GetTodoWithTagsAndCategoriesAsync(int id)
+        [Route("tagsandcategories/{id:int}")]
+        public async Task<ActionResult<TodoWithTagsAndCategoriesDTo>> GetTodoWithTagsAndCategories(int id)
         {
-            var result = await _todoRepository.GetTodoWithTagsAndCategoriesAsync(id);
-            return result is null ? NotFound(): Ok(result);
+            var result = await todoRepository.GetTodoWithTagsAndCategoriesAsync(id);
+            return result.Id == DefaultValues.IdNullValue ? NotFound(): Ok(result);
         }
-        
+         
         [HttpPost]
         public async Task<ActionResult> PostAsync(CreateTodoDTo createTodoDTo) 
         {
-            var createdId = await _todoRepository.CreateAsync(createTodoDTo);
+            var createdId = await todoRepository.CreateAsync(createTodoDTo);
             
-            return CreatedAtAction(nameof(GetTodoById), new { id = createdId }, null);
+            return CreatedAtAction(nameof(GetTodoWithTagsAndCategories), new { id = createdId }, null);
         }
-
-        [HttpPut("{id}")]
+            
+        [HttpPut("{id:int}")]
         public async Task<ActionResult> PutAsync(int id, UpdateTodoDTo updateTodoDTo) 
         {
-            var existTodo = await _todoRepository.GetTodoWithTagAndCategoryIdsAsync(id);
-            if (existTodo is null)
-            {
-                return NotFound();
-            }
-            
-            _mapper.Map(updateTodoDTo, existTodo);
-            existTodo = existTodo with { Id = id };
-            var updatedTodo = _mapper.Map<UpdateTodoDTo>(existTodo);
-            
-            await _todoRepository.UpdateAsync(updatedTodo);
+            var existTodo = await todoRepository.GetTodoWithTagAndCategoryIdsAsync(id);
+            if (existTodo.Id == DefaultValues.IdNullValue) return NotFound();
+            mapper.Map(updateTodoDTo, existTodo);
+            existTodo.Id = id;
+            var updatedTodo = mapper.Map<UpdateTodoDTo>(existTodo);
+            await todoRepository.UpdateAsync(updatedTodo);
             return Ok();
         }
 
 
         [HttpDelete]
-        [Route("{id}")]
+        [Route("{id:int}")]
         public async Task<ActionResult> DeleteTodoAsync(int id)
         {
-            var todo = await _todoRepository.GetByIdAsync(id);
-            if (todo is null)
-            {
-                return NotFound();
-            }
-
-            await _todoRepository.DeleteAsync(id);
+            var todo = await todoRepository.GetByIdAsync(id);
+            if (todo.Id == DefaultValues.IdNullValue) return NotFound();
+            await todoRepository.DeleteAsync(id);
             return NoContent();
         }
     }

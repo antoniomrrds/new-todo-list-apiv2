@@ -3,15 +3,16 @@ using System.Text;
 using Dapper;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
-using TodoList.Infrastructure.database;
+using TodoList.Infrastructure.DataBase;
+
 
 namespace TodoList.Infrastructure.Repositories;
 
 public class CategoryRepository : ICategoryRepository
 {
-    private readonly SqlConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public CategoryRepository(SqlConnectionFactory connectionFactory)
+    public CategoryRepository(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -94,9 +95,8 @@ public class CategoryRepository : ICategoryRepository
 
         const string sql = "SELECT ID FROM tbl_category WHERE ID IN @CategoryIds";
         await using var connection = _connectionFactory.Create();
-        var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { TagIds = categoriesId })).ToList();
-        
-        var missingCategoriesIds = categoriesId.Except(existingCategoriesIds).ToList();
-        return missingCategoriesIds;
+        var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { CategoryIds = categoriesId }));
+        var missingCategoriesIds = categoriesId.Except(existingCategoriesIds);
+        return missingCategoriesIds.ToList();
     }
 }

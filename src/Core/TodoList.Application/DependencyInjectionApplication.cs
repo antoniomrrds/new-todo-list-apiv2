@@ -10,6 +10,7 @@ public static class DependencyInjectionApplication{
     {
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddValidatorsFromAssembly(typeof(DependencyInjectionApplication).Assembly); 
+        
 
         services.Configure<ApiBehaviorOptions>(options =>
         {

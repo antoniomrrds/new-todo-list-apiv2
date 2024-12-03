@@ -9,15 +9,13 @@ public class TodoProfile: Profile
 {
     public TodoProfile()
     {
-
+        
         CreateMap<UpdateTodoDTo, TodoWithTagAndCategoryIdsDto>()
             .ForAllMembers(opts => opts.Condition((_, _, srcMember) => srcMember != null));
-
         CreateMap<Todo, TodoDTo>();
         CreateMap<Todo, CreateTodoDTo>();
         CreateMap<CreateTodoDTo, TodoDTo>()
             .ForAllMembers(opts => opts.Condition((_, _, srcMember) => srcMember != null));
-        // Add this mapping
         CreateMap<TodoWithTagAndCategoryIdsDto, UpdateTodoDTo>()
             .ForAllMembers(opts => opts.Condition((_, _, srcMember) => srcMember != null));
     }

@@ -2,14 +2,14 @@
 using Dapper;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
-using TodoList.Infrastructure.database;
+using TodoList.Infrastructure.DataBase;
 
 namespace TodoList.Infrastructure.Repositories;
 
 public class TagRepository: ITagRepository
 {
-    private readonly SqlConnectionFactory _connectionFactory;
-    public TagRepository(SqlConnectionFactory connectionFactory)
+    private readonly IDbConnectionFactory _connectionFactory;
+    public TagRepository(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -108,9 +108,9 @@ public class TagRepository: ITagRepository
 
             const string sql = "SELECT ID FROM tbl_tag WHERE ID IN @TagIds";
              await using var connection = _connectionFactory.Create();
-             var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds })).ToList();
+             var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds }));
 
-             var missingTagIds = tagIds.Except(existingTagIds).ToList();
+             var missingTagIds = tagIds.Except(existingTagIds);
 
              return missingTagIds;
     }

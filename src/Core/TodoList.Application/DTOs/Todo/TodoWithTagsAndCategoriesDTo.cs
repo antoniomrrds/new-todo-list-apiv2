@@ -1,19 +1,19 @@
-﻿using TodoList.Domain.Constants;
-using Entities = TodoList.Domain.Entities;
+﻿using Entities = TodoList.Domain.Entities;
 namespace TodoList.Application.DTOs.Todo;
 
-public record TodoWithTagsAndCategoriesDTo(
-    int Id ,
-    string Title,
-    string Description,
-    bool IsCompleted,
-    int Active,
-    DateTime CreatedAt,
-    DateTime UpdatedAt,
-    DateTime? ExpirationDate,
-    string? ExpirationDateFormatted,
-    string? CreatedAtFormatted,
-    string? UpdatedAtFormatted,
-    List<Entities.Tag> Tags,
-    List<Entities.Category> Categories
-    );
+public record TodoWithTagsAndCategoriesDTo
+{
+    public int Id { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
+    public bool IsCompleted { get; init; }
+    public int Active { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime UpdatedAt { get; init; }
+    public DateTime? ExpirationDate { get; init; }
+    public string? ExpirationDateFormatted { get; init; }
+    public string? CreatedAtFormatted { get; init; }
+    public string? UpdatedAtFormatted { get; init; }
+    public List<Entities.Tag> Tags { get; init; } = [];
+    public List<Entities.Category> Categories { get; init; } = [];
+}
