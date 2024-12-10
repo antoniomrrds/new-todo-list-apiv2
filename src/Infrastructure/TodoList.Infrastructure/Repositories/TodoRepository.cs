@@ -5,6 +5,7 @@ using TodoList.Application.Constants;
 using TodoList.Application.DTOs.Todo;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
 
 namespace TodoList.Infrastructure.Repositories;
 
@@ -27,7 +28,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
     sql.AppendLine("       @Title,                         ");
     sql.AppendLine("       @Description,                   ");
     sql.AppendLine("       @IsCompleted,                   ");
-    sql.AppendLine("       @Active,                        ");
+    sql.AppendLine("       @State,                         ");
     sql.AppendLine("       @CreatedAt,                     ");
     sql.AppendLine("       @UpdatedAt,                     ");
     sql.AppendLine("       @ExpirationDate                 ");
@@ -66,10 +67,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
 
       if (todo is null)
       {
-        return new TodoWithTagAndCategoryIdsDto
-              .Builder(DefaultValues.IdNullValue, string.Empty, 
-                string.Empty, [],[])
-          .Build();
+        return new TodoWithTagAndCategoryIdsDto();
       }
 
       var tagAndCategoryIds = new TagAndCategoryFieldsDTo
@@ -79,15 +77,22 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
       };
 
       return new TodoWithTagAndCategoryIdsDto
-          .Builder(todo.Id, todo.Title, todo.Description, tagAndCategoryIds.IdTags,
-              tagAndCategoryIds.IdCategories)
-          .SetActive(todo.Active)
-          .SetIsCompleted(todo.IsCompleted)
-          .SetCreatedAt(todo.CreatedAt)
-          .SetUpdatedAt(todo.UpdatedAt)
-          .SetExpirationDate(todo.ExpirationDate)
-          .WithFormattedDates(todo.ExpirationDateFormatted, todo.CreatedAtFormatted, todo.UpdatedAtFormatted)
-          .Build();
+      {
+        Id = todo.Id,
+        Title = todo.Title,
+        Description = todo.Description,
+        IsCompleted = todo.IsCompleted,
+        Active = todo.State,
+        CreatedAt = todo.CreatedAt,
+        UpdatedAt = todo.UpdatedAt,
+        ExpirationDate = todo.ExpirationDate,
+        ExpirationDateFormatted = todo.ExpirationDateFormatted,
+        CreatedAtFormatted = todo.CreatedAtFormatted,
+        UpdatedAtFormatted = todo.UpdatedAtFormatted,
+        IdTags = tagAndCategoryIds.IdTags,
+        IdCategories = tagAndCategoryIds.IdCategories
+      };
+
     });
   }
 
@@ -112,7 +117,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
         Title = todo.Title,
         Description = todo.Description,
         IsCompleted = todo.IsCompleted,
-        Active = todo.Active,
+        State =  todo.State,
         CreatedAt = todo.CreatedAt,
         UpdatedAt = todo.UpdatedAt,
         ExpirationDate = todo.ExpirationDate,
@@ -147,7 +152,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
     updateTodoSql.AppendLine("       TITLE = @Title,                    ");
     updateTodoSql.AppendLine("       DESCRIPTION = @Description,        ");
     updateTodoSql.AppendLine("       IS_COMPLETED = @IsCompleted,       ");
-    updateTodoSql.AppendLine("       ACTIVE = @Active,                  ");
+    updateTodoSql.AppendLine("       ACTIVE = @State,                   ");
     updateTodoSql.AppendLine("       UPDATED_AT = @UpdatedAt,           ");
     updateTodoSql.AppendLine("       EXPIRATION_DATE = @ExpirationDate  ");
     updateTodoSql.AppendLine("WHERE ID = @Id;                           ");
@@ -263,7 +268,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
     sql.AppendLine("       TD.DESCRIPTION                        AS Description,                   ");
     sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                   ");
     sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                ");
-    sql.AppendLine("       TD.ACTIVE                             AS Active,                        ");
+    sql.AppendLine("       TD.ACTIVE                             AS State,                        ");
     sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                     ");
     sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                     ");
     sql.AppendLine("DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
@@ -280,7 +285,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
     sql.AppendLine("       TG.NAME        AS Name,              ");
     sql.AppendLine("       TG.COLOR       AS Color,             ");
     sql.AppendLine("       TG.DESCRIPTION AS Description,       ");
-    sql.AppendLine("       TG.ACTIVE      AS Active,            ");
+    sql.AppendLine("       TG.ACTIVE      AS State,             ");
     sql.AppendLine("       TG.CREATED_AT  AS CreatedAt,         ");
     sql.AppendLine("       TG.UPDATED_AT  AS UpdatedAt          ");
     sql.AppendLine("FROM tbl_tag TG                             ");
@@ -296,7 +301,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
     sql.AppendLine("SELECT C.ID          AS Id,                           ");
     sql.AppendLine("       C.NAME        AS Name,                         ");
     sql.AppendLine("       C.DESCRIPTION AS Description,                  ");
-    sql.AppendLine("       C.ACTIVE      AS Active,                       ");
+    sql.AppendLine("       C.ACTIVE      AS State,                        ");
     sql.AppendLine("       C.CREATED_AT  AS CreatedAt,                    ");
     sql.AppendLine("       C.UPDATED_AT  AS UpdatedAt                     ");
     sql.AppendLine("FROM tbl_category C                                   ");

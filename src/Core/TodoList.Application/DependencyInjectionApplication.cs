@@ -2,7 +2,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
-
 namespace TodoList.Application;
 
 public static class DependencyInjectionApplication{
@@ -10,7 +9,6 @@ public static class DependencyInjectionApplication{
     {
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddValidatorsFromAssembly(typeof(DependencyInjectionApplication).Assembly); 
-        
 
         services.Configure<ApiBehaviorOptions>(options =>
         {

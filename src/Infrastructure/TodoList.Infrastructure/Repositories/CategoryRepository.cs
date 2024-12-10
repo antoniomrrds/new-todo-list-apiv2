@@ -1,22 +1,12 @@
-
 using System.Text;
 using Dapper;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
 using TodoList.Infrastructure.DataBase;
 
-
 namespace TodoList.Infrastructure.Repositories;
-
-public class CategoryRepository : ICategoryRepository
+public class CategoryRepository(IDbConnectionFactory connectionFactory) : ICategoryRepository
 {
-    private readonly IDbConnectionFactory _connectionFactory;
-
-    public CategoryRepository(IDbConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory;
-    }
-    
     public async Task<int> CreateAsync(Category category)
     {
         category.CreatedAt = DateTime.Now;
@@ -33,7 +23,7 @@ public class CategoryRepository : ICategoryRepository
         sql.AppendLine("       @UpdatedAt        ");
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.QueryFirstAsync<int>(sql.ToString(), category);
     }
     
@@ -42,7 +32,7 @@ public class CategoryRepository : ICategoryRepository
     {
         var sql = GetBaseQuery();
         sql.AppendLine("ORDER BY NAME;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         var categories = await connection.QueryAsync<Category>(sql.ToString());
         return categories;
     }
@@ -51,7 +41,7 @@ public class CategoryRepository : ICategoryRepository
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         var category = await connection.QueryFirstOrDefaultAsync<Category>(sql.ToString(), new { Id = id });
         return category;
     }
@@ -64,7 +54,7 @@ public class CategoryRepository : ICategoryRepository
         sql.AppendLine("       NAME = @Name,           ");
         sql.AppendLine("       UPDATED_AT = @UpdatedAt ");
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), category);
     }
     
@@ -73,7 +63,7 @@ public class CategoryRepository : ICategoryRepository
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_category ");
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), new { Id = id });
     }
     
@@ -94,7 +84,7 @@ public class CategoryRepository : ICategoryRepository
         if (categoriesId.Count == 0) return  new List<int>();
 
         const string sql = "SELECT ID FROM tbl_category WHERE ID IN @CategoryIds";
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { CategoryIds = categoriesId }));
         var missingCategoriesIds = categoriesId.Except(existingCategoriesIds);
         return missingCategoriesIds.ToList();

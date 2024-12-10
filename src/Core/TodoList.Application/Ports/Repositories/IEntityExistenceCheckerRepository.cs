@@ -1,6 +1,6 @@
 ﻿namespace TodoList.Application.ports.Repositories;
 
-public interface IEntityExistenceChecker
+public interface IEntityExistenceCheckerRepository
 {
     Task<IEnumerable<int>> AreAllEntitiesPresentAsync(IEnumerable<int> ids);
 }

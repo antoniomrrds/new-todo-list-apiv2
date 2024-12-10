@@ -7,30 +7,33 @@ using TodoList.Infrastructure.Repositories;
 
 namespace TodoList.Infrastructure
 {
-  public static class DependencyInjection
-  {
-    public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static class DependencyInjection
     {
-      services.AddSingleton<IDbConnectionFactory>(_ =>
-      {
-        var connectionString = configuration.GetConnectionString("DefaultConnection") 
-                                         ?? throw new ApplicationException("Connection string 'DefaultConnection' not found.");
-        return new SqlConnectionFactory(connectionString);
-      });
+        public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddSingleton<IDbConnectionFactory>(_ =>
+            {
+                var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-      services.AddTransient<IDatabaseExecutor, DatabaseExecutor>();
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("The connection string 'DefaultConnection' is missing or invalid.");
+                }
 
+                return new SqlConnectionFactory(connectionString);
+            });
 
-      services.AddScoped<IDbConnection>(serviceProvider =>
-      {
-        var connectionFactory = serviceProvider.GetRequiredService<IDbConnectionFactory>();
-        return connectionFactory.Create();
-      });
+            services.AddTransient<IDatabaseExecutor, DatabaseExecutor>();
 
-      services.AddTransient<ITodoRepository, TodoRepository>();
-      services.AddTransient<ITagRepository, TagRepository>();
-      services.AddTransient<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IDbConnection>(serviceProvider =>
+            {
+                var connectionFactory = serviceProvider.GetRequiredService<IDbConnectionFactory>();
+                return connectionFactory.Create();
+            });
 
+            services.AddTransient<ITodoRepository, TodoRepository>();
+            services.AddTransient<ITagRepository, TagRepository>();
+            services.AddTransient<ICategoryRepository, CategoryRepository>();
+        }
     }
-  }
 }

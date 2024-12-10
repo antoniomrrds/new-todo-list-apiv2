@@ -2,41 +2,34 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Tag;
 using TodoList.Application.ports.Repositories;
+using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
 
 namespace TodoList.Api.Controllers;
 
 [ApiController]
 [Route("api/tag")]
-public class TagController : ControllerBase
+public class TagController(ITagRepository tagRepository, IMapper mapper) : ControllerBase
 {
-    private readonly ITagRepository _tagRepository;
-    private readonly IMapper _mapper;
-
-    public TagController(ITagRepository tagRepository, IMapper mapper)
-    {
-        _tagRepository = tagRepository;
-        _mapper = mapper;
-    }
-
-    [HttpGet("{id}")]
+  [HttpGet("{id:int}")]
     public async Task<ActionResult<TagDTo>> GetId(int id)
     {
-        var tag = await _tagRepository.GetByIdAsync(id);
-        if (tag is null)
+        var tag = await tagRepository.GetByIdAsync(id);
+        
+        if (tag.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
         }
 
-        var tagResult = _mapper.Map<TagDTo>(tag);
+        var tagResult = mapper.Map<TagDTo>(tag);
         return Ok(tagResult);
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TagDTo>>> GetAllAsync()
     {
-        var tags = await _tagRepository.GetAllTagsWithDetailsAsync();
-        var tagsResult = tags.Select(tag => _mapper.Map<TagDTo>(tag)).ToList();
+        var tags = await tagRepository.GetAllTagsWithDetailsAsync();
+        var tagsResult = tags.Select(tag => mapper.Map<TagDTo>(tag)).ToList();
         return Ok(tagsResult);
     }
 
@@ -45,10 +38,10 @@ public class TagController : ControllerBase
         [FromBody]
         CreateTagDTo createTagDTo)
     {
-        var tag = _mapper.Map<Tag>(createTagDTo);
-        var createdId = await _tagRepository.CreateAsync(tag);
+        var tag = mapper.Map<Tag>(createTagDTo);
+        var createdId = await tagRepository.CreateAsync(tag);
 
-        var createdTagDTo = _mapper.Map<TagDTo>(tag) with { Id = createdId };
+        var createdTagDTo = mapper.Map<TagDTo>(tag) with { Id = createdId };
         return CreatedAtAction(
             actionName: nameof(GetId),
             routeValues: new { id = createdId },
@@ -56,32 +49,32 @@ public class TagController : ControllerBase
         );
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<ActionResult<TagDTo>> UpdateAsync(int id, CreateTagDTo updateTagDTo)
     {
-        var existTag = await _tagRepository.GetByIdAsync(id);
+        var existTag = await tagRepository.GetByIdAsync(id);
         if (existTag is null)
         {
             return NotFound();
         }
 
-        _mapper.Map(updateTagDTo, existTag); 
-       await _tagRepository.UpdateAsync(existTag);
+        mapper.Map(updateTagDTo, existTag); 
+       await tagRepository.UpdateAsync(existTag);
 
-        var tagResponse = _mapper.Map<TagDTo>(existTag);
+        var tagResponse = mapper.Map<TagDTo>(existTag);
         return Ok(tagResponse);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<ActionResult> DeleteAsync(int id)
     {
-        var tag = await _tagRepository.GetByIdAsync(id);
+        var tag = await tagRepository.GetByIdAsync(id);
         if (tag is null)
         {
             return NotFound();
         }
 
-        await _tagRepository.DeleteTagByIdAsync(id);
+        await tagRepository.DeleteTagByIdAsync(id);
         return NoContent();
     }
 }

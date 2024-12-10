@@ -2,7 +2,7 @@
 
 namespace TodoList.Application.ports.Repositories;
 
-public interface ICategoryRepository: IEntityExistenceChecker
+public interface ICategoryRepository: IEntityExistenceCheckerRepository
 {
     Task<int> CreateAsync(Category category);
     Task<IEnumerable<Category>> GetAllCategoriesWithDetailsAsync();

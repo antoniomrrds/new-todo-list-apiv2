@@ -57,7 +57,6 @@ namespace TodoList.Api.Controllers
             return Ok();
         }
 
-
         [HttpDelete]
         [Route("{id:int}")]
         public async Task<ActionResult> DeleteTodoAsync(int id)

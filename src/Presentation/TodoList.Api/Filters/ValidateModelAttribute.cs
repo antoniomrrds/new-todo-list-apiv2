@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using TodoList.Application.Constants;
 
 namespace TodoList.Api.Filters
 {
@@ -35,7 +36,7 @@ namespace TodoList.Api.Filters
                     .Select(_ => $"O valor do campo '{key.Replace("$.", "")}' está errado. Verifique o modelo e tente novamente.")
                     .ToList();
 
-                if (conversionErrors != null && conversionErrors.Any())
+                if (conversionErrors != null && conversionErrors.Count != DefaultValues.IdNullValue)
                 {
                     errors[key.Replace("$.", "")] = conversionErrors;
                 }

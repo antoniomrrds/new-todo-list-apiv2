@@ -6,15 +6,9 @@ using TodoList.Infrastructure.DataBase;
 
 namespace TodoList.Infrastructure.Repositories;
 
-public class TagRepository: ITagRepository
+public class TagRepository(IDbConnectionFactory connectionFactory) : ITagRepository
 {
-    private readonly IDbConnectionFactory _connectionFactory;
-    public TagRepository(IDbConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory;
-    }
-    
-    public async Task<int> CreateAsync(Tag tag)
+  public async Task<int> CreateAsync(Tag tag)
     {
         tag.CreatedAt = DateTime.Now;
         tag.UpdatedAt = DateTime.Now;
@@ -38,25 +32,26 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       @UpdatedAt   ");
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.QueryFirstAsync<int>(sql.ToString(), tag);
     }
 
     public async Task<IEnumerable<Tag>> GetAllTagsWithDetailsAsync()
     {
         var sql = GetBaseQuery();
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         var tags = await connection.QueryAsync<Tag>(sql.ToString());
         return tags;
     }
 
-    public async Task<Tag?> GetByIdAsync(int id)
+    public async Task<Tag> GetByIdAsync(int id)
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         var tag = await connection.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id });
-        return tag;
+
+        return tag ?? new Tag();
     }
 
     public async Task<int> UpdateAsync(Tag tag)
@@ -73,7 +68,7 @@ public class TagRepository: ITagRepository
         sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), tag);
     }
 
@@ -82,7 +77,7 @@ public class TagRepository: ITagRepository
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_tag");
         sql.AppendLine(" WHERE ID = @Id;");
-        await using var connection = _connectionFactory.Create();
+        await using var connection = connectionFactory.Create();
         return await connection.ExecuteAsync(sql.ToString(), new { Id = id });
     }
     
@@ -107,7 +102,7 @@ public class TagRepository: ITagRepository
         if (tagIds.Count == 0) return new List<int>();
 
             const string sql = "SELECT ID FROM tbl_tag WHERE ID IN @TagIds";
-             await using var connection = _connectionFactory.Create();
+             await using var connection = connectionFactory.Create();
              var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds }));
 
              var missingTagIds = tagIds.Except(existingTagIds);
