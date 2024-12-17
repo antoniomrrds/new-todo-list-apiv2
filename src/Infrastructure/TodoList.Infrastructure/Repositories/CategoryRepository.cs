@@ -5,57 +5,55 @@ using TodoList.Domain.Entities;
 using TodoList.Infrastructure.DataBase;
 
 namespace TodoList.Infrastructure.Repositories;
-public class CategoryRepository(IDbConnectionFactory connectionFactory) : ICategoryRepository
+public class CategoryRepository(IDatabaseExecutor databaseExecutor) : ICategoryRepository
 {
     public async Task<int> CreateAsync(Category category)
     {
-        category.CreatedAt = DateTime.Now;
-        category.UpdatedAt = DateTime.Now;
+        category.SetDateOfCreation();
         
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_category(");
         sql.AppendLine("       NAME,             ");
+        sql.AppendLine("       DESCRIPTION,      ");
+        sql.AppendLine("       ACTIVE,           ");
         sql.AppendLine("       CREATED_AT,       ");
-        sql.AppendLine("       UPDATED_AT        ");   
+        sql.AppendLine("       UPDATED_AT        ");
         sql.AppendLine(") VALUES (");
         sql.AppendLine("       @Name,            ");
+        sql.AppendLine("       @Description,     ");
+        sql.AppendLine("       @Active,          ");
         sql.AppendLine("       @CreatedAt,       ");
         sql.AppendLine("       @UpdatedAt        ");
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        await using var connection = connectionFactory.Create();
-        return await connection.QueryFirstAsync<int>(sql.ToString(), category);
+        return await databaseExecutor.ExecuteAsync(async con => await con.QueryFirstAsync<int>(sql.ToString(), category));
     }
     
-
     public async Task<IEnumerable<Category>> GetAllCategoriesWithDetailsAsync()
     {
         var sql = GetBaseQuery();
         sql.AppendLine("ORDER BY NAME;");
-        await using var connection = connectionFactory.Create();
-        var categories = await connection.QueryAsync<Category>(sql.ToString());
-        return categories;
+        return await databaseExecutor.ExecuteAsync(async con => await con.QueryAsync<Category>(sql.ToString()));
     }
 
-    public async Task<Category?> GetByIdAsync(int id)
+    public async Task<Category> GetByIdAsync(int id)
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = connectionFactory.Create();
-        var category = await connection.QueryFirstOrDefaultAsync<Category>(sql.ToString(), new { Id = id });
-        return category;
+        return await databaseExecutor.ExecuteAsync( async con =>  await con.QueryFirstOrDefaultAsync<Category>(sql.ToString(), new { id })) ?? new Category();
     }
 
     public async Task<int> UpdateAsync(Category category)
     {
         category.UpdatedAt = DateTime.Now;
         var sql = new StringBuilder();
-        sql.AppendLine("UPDATE tbl_category SET        ");
-        sql.AppendLine("       NAME = @Name,           ");
-        sql.AppendLine("       UPDATED_AT = @UpdatedAt ");
+        sql.AppendLine("UPDATE tbl_category SET            ");
+        sql.AppendLine("       NAME = @Name,               ");
+        sql.AppendLine("       DESCRIPTION = @Description, ");
+        sql.AppendLine("       ACTIVE = @Active,           ");
+        sql.AppendLine("       UPDATED_AT = @UpdatedAt     ");
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = connectionFactory.Create();
-        return await connection.ExecuteAsync(sql.ToString(), category);
+        return await databaseExecutor.ExecuteAsync( con =>  con.ExecuteAsync(sql.ToString(), category));
     }
     
     public async Task<int> DeleteCategoryByIdAsync(int id)
@@ -63,18 +61,19 @@ public class CategoryRepository(IDbConnectionFactory connectionFactory) : ICateg
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_category ");
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = connectionFactory.Create();
-        return await connection.ExecuteAsync(sql.ToString(), new { Id = id });
+        return await databaseExecutor.ExecuteAsync( con =>  con.ExecuteAsync(sql.ToString(), new {  id }));
     }
     
     private static StringBuilder GetBaseQuery()
     {
         var sql = new StringBuilder();
-        sql.AppendLine("SELECT ID,             ");
-        sql.AppendLine("       NAME,           ");
-        sql.AppendLine("       CREATED_AT,     ");
-        sql.AppendLine("       UPDATED_AT      ");
-        sql.AppendLine("FROM tbl_category      ");
+        sql.AppendLine("SELECT ID              AS Id,           ");
+        sql.AppendLine("       NAME            AS Name,         ");
+        sql.AppendLine("       DESCRIPTION     AS Description,  ");
+        sql.AppendLine("       ACTIVE          AS Active,       ");
+        sql.AppendLine("       CREATED_AT      AS CreatedAt,    ");
+        sql.AppendLine("       UPDATED_AT      As UpdatedAt     ");
+        sql.AppendLine("FROM tbl_category                       ");
         return sql;
     }
 
@@ -84,9 +83,8 @@ public class CategoryRepository(IDbConnectionFactory connectionFactory) : ICateg
         if (categoriesId.Count == 0) return  new List<int>();
 
         const string sql = "SELECT ID FROM tbl_category WHERE ID IN @CategoryIds";
-        await using var connection = connectionFactory.Create();
-        var existingCategoriesIds = (await connection.QueryAsync<int>(sql, new { CategoryIds = categoriesId }));
+        var existingCategoriesIds= await databaseExecutor.ExecuteAsync(  con => con.QueryAsync<int>(sql, new { CategoryIds = categoriesId }));
         var missingCategoriesIds = categoriesId.Except(existingCategoriesIds);
-        return missingCategoriesIds.ToList();
+        return missingCategoriesIds;
     }
 }

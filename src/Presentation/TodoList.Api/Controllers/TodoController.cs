@@ -54,7 +54,7 @@ namespace TodoList.Api.Controllers
             existTodo.Id = id;
             var updatedTodo = mapper.Map<UpdateTodoDTo>(existTodo);
             await todoRepository.UpdateAsync(updatedTodo);
-            return Ok();
+            return NoContent();
         }
 
         [HttpDelete]

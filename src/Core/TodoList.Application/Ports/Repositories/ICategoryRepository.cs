@@ -8,5 +8,5 @@ public interface ICategoryRepository: IEntityExistenceCheckerRepository
     Task<IEnumerable<Category>> GetAllCategoriesWithDetailsAsync();
     Task<int> UpdateAsync(Category category);
     Task<int> DeleteCategoryByIdAsync(int id);
-    Task<Category?> GetByIdAsync(int id);
+    Task<Category> GetByIdAsync(int id);
 }

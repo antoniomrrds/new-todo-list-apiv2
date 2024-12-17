@@ -1,3 +1,5 @@
+using TodoList.Domain.Enums;
+
 namespace TodoList.Domain.Entities;
 
 public abstract class BaseEntity

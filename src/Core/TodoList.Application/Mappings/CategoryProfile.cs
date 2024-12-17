@@ -9,6 +9,8 @@ public class CategoryProfile : Profile
     public CategoryProfile()
     {
         CreateMap<CreateCategoryDTo, Category>();
+        CreateMap<UpdateCategoryDTo, Category>();
+
     }
 
 }

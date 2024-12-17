@@ -1,17 +1,11 @@
-﻿using TodoList.Application.Constants;
+﻿using TodoList.Application.Ports.Validators;
 
 namespace TodoList.Application.DTOs.Category;
 
-public record CreateCategoryDTo(
-    string Name , 
-    string Description,
-    int Active = DefaultValues.Active
-    );
+public class CreateCategoryDTo : CommonPropertiesTagAndCategory
+{ }
 
-public record CategoryDTo(
-        int Id,
-        string Name,
-        string Description,
-        int Active,
-        DateTime CreatedAt,
-        DateTime UpdatedAt);
+public class UpdateCategoryDTo : CommonPropertiesTagAndCategory
+{
+    public DateTime UpdatedAt { get; set; }
+}

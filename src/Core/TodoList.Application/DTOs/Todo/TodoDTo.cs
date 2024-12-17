@@ -1,4 +1,6 @@
 ﻿
+using TodoList.Domain.Enums;
+
 namespace TodoList.Application.DTOs.Todo;
 
 public record TodoDTo(
@@ -6,7 +8,7 @@ public record TodoDTo(
     string Title,
     string Description,
     bool IsCompleted,
-    int Active,
+    ActivationState Active,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     DateTime? ExpirationDate,

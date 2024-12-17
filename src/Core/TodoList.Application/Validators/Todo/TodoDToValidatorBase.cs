@@ -17,8 +17,8 @@ public abstract class TodoDToValidatorBase<T> : AbstractValidator<T> where T : I
             .NotEmpty().WithMessage("A descrição é obrigatória.")
             .MinimumLength(5).WithMessage("A descrição deve ter no mínimo 5 caracteres.");
 
-        RuleFor(x => (int)x.State)
-            .InclusiveBetween(0, 1).WithMessage("O Campo State deve ser 0 (inativo) ou 1 (ativo).");
+        RuleFor(x => (int)x.Active)
+            .InclusiveBetween(0, 1).WithMessage("O Campo Active deve ser 0 (inativo) ou 1 (ativo).");
     }
 }
 

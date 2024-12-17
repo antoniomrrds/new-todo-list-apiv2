@@ -2,23 +2,19 @@
 using Dapper;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
-using TodoList.Infrastructure.DataBase;
 
 namespace TodoList.Infrastructure.Repositories;
 
-public class TagRepository(IDbConnectionFactory connectionFactory) : ITagRepository
+public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
 {
   public async Task<int> CreateAsync(Tag tag)
-    {
-        tag.CreatedAt = DateTime.Now;
-        tag.UpdatedAt = DateTime.Now;
-        
+  {
+        tag.SetDateOfCreation();
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_tag(");
         sql.AppendLine("       NAME,        ");
         sql.AppendLine("       COLOR,       ");
         sql.AppendLine("       DESCRIPTION, ");
-        sql.AppendLine("       SLUG,        ");
         sql.AppendLine("       ACTIVE,      ");
         sql.AppendLine("       CREATED_AT,  ");
         sql.AppendLine("       UPDATED_AT   ");
@@ -26,31 +22,27 @@ public class TagRepository(IDbConnectionFactory connectionFactory) : ITagReposit
         sql.AppendLine("       @Name,       ");
         sql.AppendLine("       @Color,      ");
         sql.AppendLine("       @Description,");
-        sql.AppendLine("       @Slug,       ");
         sql.AppendLine("       @Active,     ");
         sql.AppendLine("       @CreatedAt,  ");
         sql.AppendLine("       @UpdatedAt   ");
         sql.AppendLine(");");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        await using var connection = connectionFactory.Create();
-        return await connection.QueryFirstAsync<int>(sql.ToString(), tag);
+        return await databaseExecutor.ExecuteAsync(con => con.ExecuteScalarAsync<int>(sql.ToString(), tag));
     }
 
-    public async Task<IEnumerable<Tag>> GetAllTagsWithDetailsAsync()
+    public async Task<IEnumerable<Tag>> GetAllAsync()
     {
         var sql = GetBaseQuery();
-        await using var connection = connectionFactory.Create();
-        var tags = await connection.QueryAsync<Tag>(sql.ToString());
-        return tags;
+        return await databaseExecutor.ExecuteAsync(con => con.QueryAsync<Tag>(sql.ToString()));
     }
 
     public async Task<Tag> GetByIdAsync(int id)
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        await using var connection = connectionFactory.Create();
-        var tag = await connection.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id });
-
+        
+        var tag =  await databaseExecutor.ExecuteAsync(con =>
+            con.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id }));
         return tag ?? new Tag();
     }
 
@@ -63,13 +55,12 @@ public class TagRepository(IDbConnectionFactory connectionFactory) : ITagReposit
         sql.AppendLine("   SET NAME = @Name,              ");
         sql.AppendLine("       COLOR = @Color,            ");
         sql.AppendLine("       DESCRIPTION = @Description,");
-        sql.AppendLine("       SLUG = @Slug,              ");
         sql.AppendLine("       ACTIVE = @Active,          ");
         sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
-        await using var connection = connectionFactory.Create();
-        return await connection.ExecuteAsync(sql.ToString(), tag);
+        return await databaseExecutor.ExecuteAsync(con => con.ExecuteScalarAsync<int>(sql.ToString(), tag));
+        
     }
 
     public  async Task<int> DeleteTagByIdAsync(int id)
@@ -77,8 +68,8 @@ public class TagRepository(IDbConnectionFactory connectionFactory) : ITagReposit
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_tag");
         sql.AppendLine(" WHERE ID = @Id;");
-        await using var connection = connectionFactory.Create();
-        return await connection.ExecuteAsync(sql.ToString(), new { Id = id });
+        return await databaseExecutor.ExecuteAsync(con =>  
+            con.ExecuteAsync(sql.ToString(), new { Id = id }));
     }
     
     private static StringBuilder GetBaseQuery()
@@ -88,7 +79,6 @@ public class TagRepository(IDbConnectionFactory connectionFactory) : ITagReposit
         sql.AppendLine("       NAME         AS Name,");
         sql.AppendLine("       COLOR        AS Color,");
         sql.AppendLine("       DESCRIPTION  AS Description,");
-        sql.AppendLine("       SLUG         AS Slug,");
         sql.AppendLine("       ACTIVE       AS Active,");
         sql.AppendLine("       CREATED_AT   AS CreatedAt,");
         sql.AppendLine("       UPDATED_AT   AS UpdatedAt");
@@ -102,8 +92,9 @@ public class TagRepository(IDbConnectionFactory connectionFactory) : ITagReposit
         if (tagIds.Count == 0) return new List<int>();
 
             const string sql = "SELECT ID FROM tbl_tag WHERE ID IN @TagIds";
-             await using var connection = connectionFactory.Create();
-             var existingTagIds = (await connection.QueryAsync<int>(sql, new { TagIds = tagIds }));
+
+            var existingTagIds = await databaseExecutor.ExecuteAsync(con =>
+                con.QueryAsync<int>(sql, new { TagIds = tagIds }));
 
              var missingTagIds = tagIds.Except(existingTagIds);
 

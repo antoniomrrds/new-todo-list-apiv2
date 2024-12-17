@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using TodoList.Application.Constants;
+using TodoList.Domain.Constants;
 
 namespace TodoList.Api.Filters
 {

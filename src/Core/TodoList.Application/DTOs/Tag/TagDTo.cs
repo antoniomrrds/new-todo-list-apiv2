@@ -1,25 +1,15 @@
-﻿using TodoList.Application.Constants;
+﻿using TodoList.Application.Ports.Validators;
 
 namespace TodoList.Application.DTOs.Tag;
 
-public record CreateTagDTo(
-    string Name,
-    string Description,
-    string Color,
-    int Active = DefaultValues.Active);
-
-
-public record TagDTo(
-    int Id,
-    string Name,
-    string Description,
-    string Color,
-    int Active,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
-    )
+public class CreateTagDTo :  CommonPropertiesTagAndCategory 
 {
-    public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm");
-    public string UpdatedAtFormatted => UpdatedAt.ToString("dd/MM/yyyy HH:mm");
-    
-};
+    public string Color { get; set; } = "#FFFFFF";
+}
+
+public class UpdateTagDTo: CommonPropertiesTagAndCategory
+{
+    public int Id { get; set; }
+    public string Color { get; set; } = "#FFFFFF";
+ }
+

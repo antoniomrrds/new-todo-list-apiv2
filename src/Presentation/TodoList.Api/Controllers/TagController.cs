@@ -12,7 +12,7 @@ namespace TodoList.Api.Controllers;
 public class TagController(ITagRepository tagRepository, IMapper mapper) : ControllerBase
 {
   [HttpGet("{id:int}")]
-    public async Task<ActionResult<TagDTo>> GetId(int id)
+    public async Task<ActionResult<Tag>> GetId(int id)
     {
         var tag = await tagRepository.GetByIdAsync(id);
         
@@ -20,60 +20,51 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
         {
             return NotFound();
         }
-
-        var tagResult = mapper.Map<TagDTo>(tag);
-        return Ok(tagResult);
+        return Ok(tag);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TagDTo>>> GetAllAsync()
+    public async Task<ActionResult<IEnumerable<Tag>>> GetAllAsync()
     {
-        var tags = await tagRepository.GetAllTagsWithDetailsAsync();
-        var tagsResult = tags.Select(tag => mapper.Map<TagDTo>(tag)).ToList();
-        return Ok(tagsResult);
+        var tags = await tagRepository.GetAllAsync();
+        return Ok(tags);
     }
 
     [HttpPost]
-    public async Task<ActionResult<TagDTo>> CreateAsync(
-        [FromBody]
-        CreateTagDTo createTagDTo)
+    public async Task<ActionResult<Tag>> CreateAsync(CreateTagDTo createTagDTo)
     {
         var tag = mapper.Map<Tag>(createTagDTo);
         var createdId = await tagRepository.CreateAsync(tag);
-
-        var createdTagDTo = mapper.Map<TagDTo>(tag) with { Id = createdId };
         return CreatedAtAction(
             actionName: nameof(GetId),
             routeValues: new { id = createdId },
-            value: createdTagDTo
+            value: null
         );
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<TagDTo>> UpdateAsync(int id, CreateTagDTo updateTagDTo)
+    public async Task<ActionResult<Tag>> UpdateAsync(int id , UpdateTagDTo updateTagDTo)
     {
         var existTag = await tagRepository.GetByIdAsync(id);
-        if (existTag is null)
+        if (existTag.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
         }
 
         mapper.Map(updateTagDTo, existTag); 
        await tagRepository.UpdateAsync(existTag);
-
-        var tagResponse = mapper.Map<TagDTo>(existTag);
-        return Ok(tagResponse);
+       
+        return Ok();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> DeleteAsync(int id)
     {
-        var tag = await tagRepository.GetByIdAsync(id);
-        if (tag is null)
+        var existTag = await tagRepository.GetByIdAsync(id);
+        if (existTag.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
         }
-
         await tagRepository.DeleteTagByIdAsync(id);
         return NoContent();
     }
