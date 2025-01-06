@@ -13,18 +13,20 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddScoped<ValidateModelAttribute>();
 
-builder.Services.AddCors(options => {
-    options.AddPolicy("MyPolicy", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173", "http://192.168.18.6:5173", "http://172.17.80.1:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials(); 
-    });
+builder.Services.AddCors(options =>
+{
+  options.AddPolicy("MyPolicy", policy =>
+  {
+    policy
+        .AllowAnyOrigin()       // Permite qualquer origem
+        .AllowAnyHeader()       // Permite qualquer cabeçalho
+        .AllowAnyMethod()       // Permite qualquer método
+        .WithExposedHeaders("Location");  // Expõe o cabeçalho Location
+  });
 });
 
-    
-    
+
+
 builder.Services.AddControllers(options => { options.Filters.Add<ValidateModelAttribute>(); });
 
 var app = builder.Build();
@@ -35,13 +37,10 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 // Configura o pipeline de requisições HTTP.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+  app.UseSwagger();
+  app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-// Aplica a política de CORS antes de qualquer outro middleware que manipule requisições
 app.UseCors("MyPolicy");
 
 app.UseAuthorization();

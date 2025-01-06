@@ -1,0 +1,29 @@
+# Formatação básica e avançada de código C#
+[*.cs]
+# Indentação
+indent_style = space           # Usa espaços para indentação
+indent_size = 4                # Define 4 espaços por nível de indentação
+tab_width = 4                  # Largura de tabulação 4 (caso utilize tab)
+
+# Comprimento de linha
+max_line_length = 120          # Limita o comprimento da linha a 120 caracteres
+
+# Quebras de linha
+end_of_line = lf               # Define LF (Line Feed) como terminador de linha
+insert_final_newline = true    # Garante que uma linha em branco seja inserida ao final do arquivo
+
+# Espacialidade
+trim_trailing_whitespace = true # Remove espaços em branco à direita
+
+# Codificação
+charset = utf-8                # Codificação de caracteres: UTF-8
+
+# Regras de código
+max_blank_lines = 1            # Limita o número máximo de linhas em branco consecutivas
+blank_line_before_property = true  # Exige uma linha em branco antes das propriedades
+
+# Regras de estilo de nome
+
+
+
+

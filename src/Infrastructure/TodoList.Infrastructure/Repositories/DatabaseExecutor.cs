@@ -14,6 +14,7 @@ public class DatabaseExecutor(IDbConnectionFactory connectionFactory) : IDatabas
   public async Task<T> ExecuteAsync<T>(Func<IDbConnection, Task<T>> query)
   {
     await using var connection = connectionFactory.Create();
+    await connection.OpenAsync();
     return await query(connection);
   }
 

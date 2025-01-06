@@ -12,8 +12,8 @@ public abstract class CommonTagAndCategoryValidator<T> : AbstractValidator<T> wh
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("A Descrição é obrigatória.")
             .MaximumLength(500).WithMessage("A Descrição deve ter no máximo 500 caracteres.");
-        RuleFor(x => (int)x.Active)
-            .InclusiveBetween(0, 1).WithMessage("O Campo Active deve ser 0 (inativo) ou 1 (ativo).");
+        RuleFor(x => x.Active)
+            .IsInEnum().WithMessage("O Campo Active deve ser 'Active' (1) ou 'Inactive' (0).");
     }
 }
 

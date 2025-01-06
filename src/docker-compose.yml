@@ -1,23 +1,23 @@
-version: "3.8"
+version: "3.9"
 
 services:
   db:
-    image: mysql:8.0
-    volumes:
-      - /var/lib/mysql
-      - ./dump:/docker-entrypoint-initdb.d
-    restart: always
-    ports:
-      - 3306:3306
+    image:  mysql:latest
+    container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: db_todo_list
       MYSQL_USER: user
       MYSQL_PASSWORD: pass123
       MYSQL_ROOT_HOST: '%'
-    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./dump:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
     networks:
       - db-todo-list
+    restart: always
 
 networks:
   db-todo-list:
@@ -26,3 +26,7 @@ networks:
       driver: default
       config:
         - subnet: "111.111.10.0/24"
+
+volumes:
+  mysql-data:
+    driver: local

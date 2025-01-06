@@ -1,11 +1,12 @@
-﻿using TodoList.Domain.Enums;
+﻿using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
 namespace TodoList.Application.DTOs.Todo;
 
-public class CreateTodoDTo :TagAndCategoryIdsDto
+public class CreateTodoDTo :TagAndCategoryIdsDto , ITodo
 {
     public string Title { get; set; }  = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public bool IsCompleted { get; set; }
+    public CompletionStatus IsCompleted { get; set; }
     public DateTime? ExpirationDate { get; set; }
     public ActivationState Active { get; set; }
     public DateTime CreatedAt { get; set; }

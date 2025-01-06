@@ -11,18 +11,21 @@ public abstract class TodoDToValidatorBase<T> : AbstractValidator<T> where T : I
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("O título é obrigatório.")
-            .MaximumLength(100).WithMessage("O título deve ter no máximo 100 caracteres.");
-
+            .MinimumLength(5).WithMessage("O título deve ter no mínimo 5 caracteres.");
+        
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("A descrição é obrigatória.")
             .MinimumLength(5).WithMessage("A descrição deve ter no mínimo 5 caracteres.");
 
-        RuleFor(x => (int)x.Active)
-            .InclusiveBetween(0, 1).WithMessage("O Campo Active deve ser 0 (inativo) ou 1 (ativo).");
+        RuleFor(x => x.Active)
+            .IsInEnum().WithMessage("O Campo Active deve ser 'Active' (1) ou 'Inactive' (0).");
+        RuleFor(x => x.IsCompleted)
+            .IsInEnum().WithMessage("O campo IsCompleted deve ser 'Incomplete' (0) ou 'Completed' (1).");
+
     }
 }
 
-public abstract class TodoDToBaseWithTagAndCategoryIds<T> : AbstractValidator<T> where T : TagAndCategoryIdsDto
+public abstract class TodoDToBaseWithTagAndCategoryIds<T> : TodoDToValidatorBase<T> where T : TagAndCategoryIdsDto,ITodo
 {
     protected TodoDToBaseWithTagAndCategoryIds(ITagRepository tagRepository, ICategoryRepository categoryRepository)
     {

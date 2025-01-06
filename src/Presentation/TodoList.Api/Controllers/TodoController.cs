@@ -1,54 +1,78 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using TodoList.Application.DTOs.Shared;
 using TodoList.Application.DTOs.Todo;
+using TodoList.Application.Helpers;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
+using TodoList.Domain.Entities;
 
 namespace TodoList.Api.Controllers
 {
     [ApiController]
     [Route("api/todo")]
-
-    public class TodoController(ITodoRepository todoRepository, IMapper mapper) : ControllerBase
+    public class TodoController(ITodoRepository todoRepository, IMapper mapper)
+        : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoDTo>>> GetTodosAsync()
+        public async Task<ActionResult<IEnumerable<Todo>>> GetTodosAsync()
         {
             var todos = await todoRepository.GetAllAsync();
-            var todosResult = todos.Select(mapper.Map<TodoDTo>).ToList();
-            return Ok(todosResult);
+            var todosResult = todos.ToList();
+            return Ok(todosResult.Take(100));
         }
 
-        [HttpGet]
-        [Route("{id:int}")]
-        public async Task<ActionResult<TodoDTo>> GetTodoById(int id)
+        [HttpPost("doFilter")]
+        public async Task<PagedResultDTo<Todo>> DoFilter(ToDoFilterDTo filter)
+        {
+            var pagination =
+                PaginationHelper.CalculatePagination(filter.Page,
+                    filter.PageSize);
+
+            var (todos, totalItems) = await todoRepository.FindByFilter(filter,
+                pagination.Start, pagination.PageSize);
+            var model =
+                PaginationHelper.CreatePagedResult(todos, totalItems,
+                    pagination);
+
+            return model;
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Todo>> GetTodoById(int id)
         {
             var todo = await todoRepository.GetByIdAsync(id);
-            if (todo.Id == DefaultValues.IdNullValue)  return NotFound();
-            var todoResult = mapper.Map<TodoDTo>(todo);
-            return Ok(todoResult);
+            if (todo.Id == DefaultValues.IdNullValue) return NotFound();
+            return Ok(todo);
         }
-            
-        [HttpGet]
-        [Route("tagsandcategories/{id:int}")]
-        public async Task<ActionResult<TodoWithTagsAndCategoriesDTo>> GetTodoWithTagsAndCategories(int id)
+
+        [HttpGet("tagsandcategories/{id:int}")]
+        public async Task<ActionResult<TodoWithTagsAndCategoriesDTo>>
+            GetTodoWithTagsAndCategories(int id)
         {
-            var result = await todoRepository.GetTodoWithTagsAndCategoriesAsync(id);
-            return result.Id == DefaultValues.IdNullValue ? NotFound(): Ok(result);
+            var result =
+                await todoRepository.GetTodoWithTagsAndCategoriesAsync(id);
+            return result.Id == DefaultValues.IdNullValue
+                ? NotFound()
+                : Ok(result);
         }
-         
+
+
         [HttpPost]
-        public async Task<ActionResult> PostAsync(CreateTodoDTo createTodoDTo) 
+        public async Task<ActionResult> PostAsync(CreateTodoDTo createTodoDTo)
         {
             var createdId = await todoRepository.CreateAsync(createTodoDTo);
-            
-            return CreatedAtAction(nameof(GetTodoWithTagsAndCategories), new { id = createdId }, null);
+
+            return CreatedAtAction(nameof(GetTodoWithTagsAndCategories),
+                new { id = createdId }, null);
         }
-            
+
         [HttpPut("{id:int}")]
-        public async Task<ActionResult> PutAsync(int id, UpdateTodoDTo updateTodoDTo) 
+        public async Task<ActionResult> PutAsync(int id,
+            UpdateTodoDTo updateTodoDTo)
         {
-            var existTodo = await todoRepository.GetTodoWithTagAndCategoryIdsAsync(id);
+            var existTodo =
+                await todoRepository.GetTodoWithTagAndCategoryIdsAsync(id);
             if (existTodo.Id == DefaultValues.IdNullValue) return NotFound();
             mapper.Map(updateTodoDTo, existTodo);
             existTodo.Id = id;
@@ -57,8 +81,7 @@ namespace TodoList.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete]
-        [Route("{id:int}")]
+        [HttpDelete("{id:int}")]
         public async Task<ActionResult> DeleteTodoAsync(int id)
         {
             var todo = await todoRepository.GetByIdAsync(id);

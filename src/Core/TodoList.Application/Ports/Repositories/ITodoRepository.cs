@@ -1,4 +1,5 @@
 
+using TodoList.Application.DTOs.Shared;
 using TodoList.Application.DTOs.Todo;
 using TodoList.Domain.Entities;
 
@@ -13,5 +14,6 @@ public interface ITodoRepository
     Task<Todo> GetByIdAsync(int id);
     Task<TodoWithTagAndCategoryIdsDto> GetTodoWithTagAndCategoryIdsAsync(int id);
     Task<TodoWithTagsAndCategoriesDTo> GetTodoWithTagsAndCategoriesAsync(int id);
+    Task<(IEnumerable<Todo> Items, int TotalItems)> FindByFilter(ToDoFilterDTo filter, int start = 0, int offset = 0);
     
 }
