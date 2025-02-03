@@ -57,7 +57,6 @@ namespace TodoList.Api.Controllers
                 : Ok(result);
         }
 
-
         [HttpPost]
         public async Task<ActionResult> PostAsync(CreateTodoDTo createTodoDTo)
         {

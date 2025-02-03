@@ -5,6 +5,7 @@ using TodoList.Application.DTOs.Todo;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
 using TodoList.Domain.extensions;
 
 namespace TodoList.Infrastructure.Repositories;
@@ -219,7 +220,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
 
         var sql = GetBaseQuery();
         sql.Append(GetFilteredQuery(filter));
-        sql.AppendLine("ORDER BY TD.TITLE DESC");
+        sql.AppendLine("ORDER BY TD.ID DESC");
         if (offset > 0)
             sql.AppendLine($"LIMIT {start}, {offset}");
 
@@ -298,23 +299,45 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
             await connection.ExecuteAsync(sql, new { Id = id }));
     }
 
-    private static StringBuilder GetBaseQuery()
-    {
-        var sql = new StringBuilder();
-        sql.AppendLine("SELECT TD.ID                                 AS Id,                            ");
-        sql.AppendLine("       TD.TITLE                              AS Title,                         ");
-        sql.AppendLine("       TD.DESCRIPTION                        AS Description,                   ");
-        sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                   ");
-        sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                ");
-        sql.AppendLine("       TD.ACTIVE                             AS Active,                        ");
-        sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                     ");
-        sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                     ");
-        sql.AppendLine("DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
-        sql.AppendLine("DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
-        sql.AppendLine("DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
-        sql.AppendLine("FROM tbl_todo TD                                                               ");
-        return sql;
-    }
+private static StringBuilder GetBaseQuery()
+{
+    var sql = new StringBuilder();
+    sql.AppendLine("SELECT TD.ID                                 AS Id,                                   ");
+    sql.AppendLine("       TD.TITLE                              AS Title,                                ");
+    sql.AppendLine("       TD.DESCRIPTION                        AS Description,                          ");
+    sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                          ");
+    sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                       ");
+    sql.AppendLine("       TD.ACTIVE                             AS Active,                               ");
+    sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                            ");
+    sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                            ");
+    sql.AppendLine($"{GetTodoStatusCase()}                           AS Status,                           ");
+    sql.AppendLine("       DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
+    sql.AppendLine("       DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
+    sql.AppendLine("       DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
+    sql.AppendLine("FROM tbl_todo TD                                                                      ");
+
+    return sql;
+}
+
+private static StringBuilder GetTodoStatusCase()
+{
+    var caseBuilder = new StringBuilder();
+
+    caseBuilder.AppendLine("       CASE ");
+    caseBuilder.AppendLine("           WHEN TD.ACTIVE = 0 THEN 0                            -- Suspenso");
+    caseBuilder.AppendLine("           WHEN TD.ACTIVE = 1 THEN                                         ");
+    caseBuilder.AppendLine("               CASE                                                        ");
+    caseBuilder.AppendLine("                   WHEN TD.IS_COMPLETED = 1 THEN 4         -- Concluído    ");
+    caseBuilder.AppendLine("                   WHEN TD.EXPIRATION_DATE < NOW() THEN 2  -- Expirado     ");
+    caseBuilder.AppendLine("                   WHEN TD.EXPIRATION_DATE IS NULL THEN 3  -- Indeterminado");
+    caseBuilder.AppendLine("                   ELSE 1                                  -- Ativo        ");
+    caseBuilder.AppendLine("               END                                                         ");
+    caseBuilder.AppendLine("           ELSE 0                                      -- Fallback Suspenso");
+    caseBuilder.Append("       END");
+
+    return caseBuilder;
+}
+
 
     private static StringBuilder GetTagsQuery()
     {
@@ -359,19 +382,32 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
         return sql;
     }
 
-    private static StringBuilder GetFilteredQuery(ToDoFilterDTo filter)
+private static StringBuilder GetFilteredQuery(ToDoFilterDTo filter)
+{
+    var sql = new StringBuilder();
+    if (filter is null) return sql;
+
+    if (!string.IsNullOrWhiteSpace(filter.Title))
     {
-        var sql = new StringBuilder();
-        if (filter is null) return sql;
-
-        if (!string.IsNullOrWhiteSpace(filter.Title))
-        {
-            sql.Append($"WHERE TD.TITLE LIKE '%{filter.Title}%'");
-        }
-
-        if (!filter.IsActive) return sql;
-        sql.AppendLine(sql.Length > 0 ? "AND " : "WHERE ");
-        sql.Append($" TD.ACTIVE = '{filter.Active.ToInt()}'");
-        return sql;
+        sql.Append($"WHERE TD.TITLE LIKE '%{filter.Title}%'");
     }
+
+    // Filtro de Status
+    if (filter.Status != TodoStatus.Unfiltered)
+    {
+        sql.Append(sql.Length > 0 ? "AND " : "WHERE ");
+        sql.AppendLine($"({GetTodoStatusCase()}) = {filter.Status.ToInt()}");
+    }
+
+    // Filtro de Active
+    if (filter.Active != ActivationState.Unfiltered)
+    {
+        sql.Append(sql.Length > 0 ? "AND " : "WHERE ");
+        sql.AppendLine($"TD.ACTIVE = {filter.Active.ToInt()}");
+    }
+
+
+    return sql;
+}
+
 }
