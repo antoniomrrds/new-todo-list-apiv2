@@ -12,6 +12,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddScoped<ValidateModelAttribute>();
+// Configura o roteamento para usar URLs e strings de consulta em minúsculas
+
+builder.Services.AddRouting(
+    options =>
+  {
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true;
+  });
 
 builder.Services.AddCors(options =>
 {
