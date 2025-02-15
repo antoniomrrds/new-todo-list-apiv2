@@ -1,6 +1,6 @@
 namespace TodoList.Application.DTOs.Auth;
 
-public record RegisterUser
+public record RegisterUserDTo
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

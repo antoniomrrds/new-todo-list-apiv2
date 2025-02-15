@@ -7,15 +7,17 @@ namespace TodoList.Infrastructure.Repositories;
 
 public class AuthRepository:IAuthRepository
 {
-    private readonly IDatabaseExecutor _databaseExecutor;
+    private readonly IDatabaseExecutor _dataBaseExecutor;
 
-    public AuthRepository(IDatabaseExecutor databaseExecutor)
+    public AuthRepository(IDatabaseExecutor dataBaseExecutor)
     {
-        _databaseExecutor = _databaseExecutor;
+        _dataBaseExecutor = dataBaseExecutor;
     }
 
-    public async Task<int> RegisterAsync(User user)
+    public async Task<int> SignUpUserAsync(User user)
     {
+        user.SetCreateAndUpdateDate();
+
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_user(    ");
         sql.AppendLine("       NAME,             ");
@@ -31,8 +33,9 @@ public class AuthRepository:IAuthRepository
         sql.AppendLine("       @Active,          ");
         sql.AppendLine("       @CreatedAt,       ");
         sql.AppendLine("       @UpdatedAt        ");
-        sql.AppendLine(");                      ");
+        sql.AppendLine(");                       ");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
-        return await _databaseExecutor.ExecuteAsync(async con => await con.QueryFirstAsync<int>(sql.ToString(), user));
+
+        return await _dataBaseExecutor.ExecuteAsync(async con => await con.QueryFirstAsync<int>(sql.ToString(), user));
     }
 }

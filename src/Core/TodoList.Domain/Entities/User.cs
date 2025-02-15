@@ -1,16 +1,46 @@
+using TodoList.Domain.Constants;
 using TodoList.Domain.Enums;
 
 namespace TodoList.Domain.Entities;
 
-public class User
+public class User: BaseEntity
 {
-    public string Name { get; set; } = string.Empty;
+    public string Name { get;  set; } = string.Empty;
     public string Email { get; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    public string Password { get; private set; } = string.Empty;
     public ActivationState Active { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
+
+    public User ()
+    {
+        Active = ActivationState.Active;
+    }
+
+    public User(string name, string email, string password): this()
+    {
+        Name = name;
+        Email = email;
+        Password = password;
+    }
+
+    public void SetCreationDate()
+    {
+        CreatedAt = DateTime.Now;
+    }
 
 
+    public void SetUpdateDate()
+    {
+        UpdatedAt = DateTime.Now;
+    }
+
+    public void SetCreateAndUpdateDate()
+    {
+        if (this.Id == DefaultValues.IdNullValue)
+        {
+            SetCreationDate();
+            SetUpdateDate();
+        }
+        SetUpdateDate();
+
+    }
 }

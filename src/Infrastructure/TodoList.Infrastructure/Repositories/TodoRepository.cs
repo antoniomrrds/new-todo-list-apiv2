@@ -18,7 +18,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
 
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_todo(                  ");
-        sql.AppendLine("       TITLE,                          ");
+        sql.AppendLine("       NAME,                           ");
         sql.AppendLine("       DESCRIPTION,                    ");
         sql.AppendLine("       IS_COMPLETED,                   ");
         sql.AppendLine("       ACTIVE,                         ");
@@ -26,7 +26,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
         sql.AppendLine("       UPDATED_AT,                     ");
         sql.AppendLine("       EXPIRATION_DATE                 ");
         sql.AppendLine(") VALUES (                             ");
-        sql.AppendLine("       @Title,                         ");
+        sql.AppendLine("       @Name,                         ");
         sql.AppendLine("       @Description,                   ");
         sql.AppendLine("       @IsCompleted,                   ");
         sql.AppendLine("       @Active,                        ");
@@ -155,10 +155,10 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
 
         var updateTodoSql = new StringBuilder();
         updateTodoSql.AppendLine("UPDATE tbl_todo SET                       ");
-        updateTodoSql.AppendLine("       TITLE = @Title,                    ");
+        updateTodoSql.AppendLine("       NAME = @Name,                      ");
         updateTodoSql.AppendLine("       DESCRIPTION = @Description,        ");
         updateTodoSql.AppendLine("       IS_COMPLETED = @IsCompleted,       ");
-        updateTodoSql.AppendLine("       ACTIVE = @Active,                   ");
+        updateTodoSql.AppendLine("       ACTIVE = @Active,                  ");
         updateTodoSql.AppendLine("       UPDATED_AT = @UpdatedAt,           ");
         updateTodoSql.AppendLine("       EXPIRATION_DATE = @ExpirationDate  ");
         updateTodoSql.AppendLine("WHERE ID = @Id;                           ");
@@ -309,7 +309,7 @@ private static StringBuilder GetBaseQuery()
 {
     var sql = new StringBuilder();
     sql.AppendLine("SELECT TD.ID                                 AS Id,                                   ");
-    sql.AppendLine("       TD.TITLE                              AS Title,                                ");
+    sql.AppendLine("       TD.NAME                               AS Name,                                ");
     sql.AppendLine("       TD.DESCRIPTION                        AS Description,                          ");
     sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                          ");
     sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                       ");
@@ -393,9 +393,9 @@ private static StringBuilder GetFilteredQuery(ToDoFilterDTo filter)
     var sql = new StringBuilder();
     if (filter is null) return sql;
 
-    if (!string.IsNullOrWhiteSpace(filter.Title))
+    if (!string.IsNullOrWhiteSpace(filter.Name))
     {
-        sql.Append($"WHERE TD.TITLE LIKE '%{filter.Title}%'");
+        sql.Append($"WHERE TD.Name LIKE '%{filter.Name}%'");
     }
 
     // Filtro de Status

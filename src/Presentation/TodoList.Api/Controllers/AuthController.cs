@@ -1,5 +1,8 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Auth;
+using TodoList.Application.ports.Repositories;
+using TodoList.Domain.Entities;
 using TodoList.Infrastructure.Security;
 
 namespace TodoList.Api.Controllers;
@@ -8,14 +11,24 @@ namespace TodoList.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class AuthController : ControllerBase
 {
+    private readonly IAuthRepository _authRepository;
+    private readonly IMapper _mapper;
 
-    [HttpPost("register")]
-    public ActionResult RegisterUser(RegisterUser registerUser)
+    public AuthController(IAuthRepository authRepository, IMapper mapper)
+    {
+        _authRepository = authRepository;
+        _mapper = mapper;
+    }
+
+    [HttpPost("sign-up")]
+    public async Task<ActionResult> SignUp(RegisterUserDTo registerUserDTo)
     {
          var bcryptAdapter = new BcryptAdapter();
-         var passwordHasher =  bcryptAdapter.Hash(registerUser.Password);
-        registerUser.Password = passwordHasher;
-        return Ok($"User registered: {registerUser}");
+         var passwordHasher =  bcryptAdapter.Hash(registerUserDTo.Password);
+         registerUserDTo.Password = passwordHasher;
+         var user = _mapper.Map<User>(registerUserDTo);
+        await _authRepository.SignUpUserAsync(user);
+        return NoContent();
     }
 
 }
