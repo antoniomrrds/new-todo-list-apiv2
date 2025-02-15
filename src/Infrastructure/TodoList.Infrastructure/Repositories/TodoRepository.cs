@@ -83,7 +83,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
                 Id = todo.Id,
                 Title = todo.Title,
                 Description = todo.Description,
-                CompletionStatus = todo.IsCompleted,
+                IsCompleted = todo.IsCompleted,
                 Active = todo.Active,
                 CreatedAt = todo.CreatedAt,
                 UpdatedAt = todo.UpdatedAt,
@@ -100,6 +100,11 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
 
     public async Task<TodoWithTagsAndCategoriesDTo> GetTodoWithTagsAndCategoriesAsync(int id)
     {
+
+        if (id == DefaultValues.IdNullValue)
+        {
+            return new TodoWithTagsAndCategoriesDTo();
+        }
         var query = GetCombinedQuery();
 
         return await databaseExecutor.ExecuteAsync<TodoWithTagsAndCategoriesDTo>(async con =>
@@ -117,10 +122,11 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
                 Id = todo.Id,
                 Title = todo.Title,
                 Description = todo.Description,
-                CompletionStatus = todo.IsCompleted,
+                IsCompleted = todo.IsCompleted,
                 Active = todo.Active,
                 CreatedAt = todo.CreatedAt,
                 UpdatedAt = todo.UpdatedAt,
+                Status = todo.Status,
                 ExpirationDate = todo.ExpirationDate,
                 ExpirationDateFormatted = todo.ExpirationDateFormatted,
                 CreatedAtFormatted = todo.CreatedAtFormatted,
@@ -310,7 +316,7 @@ private static StringBuilder GetBaseQuery()
     sql.AppendLine("       TD.ACTIVE                             AS Active,                               ");
     sql.AppendLine("       TD.CREATED_AT                         AS CreatedAt,                            ");
     sql.AppendLine("       TD.UPDATED_AT                         AS UpdatedAt,                            ");
-    sql.AppendLine($"{GetTodoStatusCase()}                           AS Status,                           ");
+    sql.AppendLine($"{GetTodoStatusCase()}                       AS Status,                               ");
     sql.AppendLine("       DATE_FORMAT(TD.CREATED_AT, '%d/%m/%Y %H:%i') AS CreatedAtFormatted,            ");
     sql.AppendLine("       DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
     sql.AppendLine("       DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
