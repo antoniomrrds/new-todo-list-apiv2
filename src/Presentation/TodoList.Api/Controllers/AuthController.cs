@@ -15,11 +15,16 @@ public sealed class AuthController : ControllerBase
     private readonly IAuthRepository _authRepository;
     private readonly IMapper _mapper;
     private readonly IRoleRepository _roleRepository;
+    private readonly IUserRepository _userRepository;
 
-    public AuthController(IAuthRepository authRepository, IMapper mapper, IRoleRepository roleRepository)
+    public AuthController(IAuthRepository authRepository,
+                          IMapper mapper,
+                          IRoleRepository roleRepository ,
+                          IUserRepository userRepository)
     {
         _authRepository = authRepository;
         _roleRepository = roleRepository;
+        _userRepository = userRepository;
         _mapper = mapper;
     }
 
@@ -34,12 +39,12 @@ public sealed class AuthController : ControllerBase
          return NoContent();
     }
 
-    [HttpGet("sign-in")]
+    [HttpPost("sign-in")]
     public async Task<ActionResult> SignIn(SignInDTo signInDTo)
     {
 
-       var  role  =  await _roleRepository.RoleExists(Roles.Admin);
-         return Ok(role);
+       var  user  =  await _userRepository.GetUserRolesAsync(10);
+        return Ok(user);
     }
 
 }

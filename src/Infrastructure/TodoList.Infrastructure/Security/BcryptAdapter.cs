@@ -9,8 +9,8 @@ public class BcryptAdapter: IHasher<string>
         return BCrypt.Net.BCrypt.HashPassword(input);
     }
 
-    public bool Verify(string password, string hash)
+    public bool Verify(string input, string hash)
     {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
+        return BCrypt.Net.BCrypt.Verify(input, hash);
     }
 }
