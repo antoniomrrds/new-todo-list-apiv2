@@ -11,7 +11,15 @@ namespace TodoList.Application.Validators.Auth
         {
             // Validando o Email
             RuleFor(x => x.Email)
-                .SetValidator(new EmailValidator(userRepository));
+                .SetValidator(new EmailValidator())
+                .CustomAsync(async (email, context, _) =>
+                {
+                    var emailExists = await userRepository.DoesEmailExist(email);
+                    if (emailExists)
+                    {
+                        context.AddFailure("O email informado já está em uso.");
+                    }
+                });
 
             RuleFor(x => x.Name)
                 .SetValidator(new NameValidator());

@@ -35,8 +35,9 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("sign-in")]
-    public async Task<ActionResult> SignIn()
+    public async Task<ActionResult> SignIn(SignInDTo signInDTo)
     {
+
        var  role  =  await _roleRepository.RoleExists(Roles.Admin);
          return Ok(role);
     }
