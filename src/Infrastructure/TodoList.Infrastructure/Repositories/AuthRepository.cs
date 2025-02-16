@@ -2,16 +2,19 @@ using System.Text;
 using Dapper;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
 
 namespace TodoList.Infrastructure.Repositories;
 
 public class AuthRepository:IAuthRepository
 {
     private readonly IDatabaseExecutor _dataBaseExecutor;
+    private readonly IRoleRepository _roleRepository;
 
-    public AuthRepository(IDatabaseExecutor dataBaseExecutor)
+    public AuthRepository(IDatabaseExecutor dataBaseExecutor , IRoleRepository roleRepository)
     {
         _dataBaseExecutor = dataBaseExecutor;
+        _roleRepository =  roleRepository;
     }
 
     public async Task<int> SignUpUserAsync(User user)
@@ -36,6 +39,18 @@ public class AuthRepository:IAuthRepository
         sql.AppendLine(");                       ");
         sql.AppendLine("SELECT LAST_INSERT_ID();");
 
-        return await _dataBaseExecutor.ExecuteAsync(async con => await con.QueryFirstAsync<int>(sql.ToString(), user));
+        return await _dataBaseExecutor.ExecuteWithTransactionAsync(async (connection, transaction) =>
+        {
+            var userId = await connection.QuerySingleAsync<int>(sql.ToString(), user, transaction);
+            var roleId = await _roleRepository.GetRoleIdByRoleTypeAsync(Roles.User, connection, transaction);
+            if (roleId is null or 0)
+            {
+                // If role is not found, throw an exception to trigger rollback
+                throw new InvalidOperationException("Role not found for the specified role type.");
+            }
+
+            await _roleRepository.AssociateRoleToUserAsync(userId, roleId.Value, connection, transaction);
+            return userId;
+        });
     }
 }

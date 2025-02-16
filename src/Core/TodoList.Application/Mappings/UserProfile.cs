@@ -8,6 +8,6 @@ public class UserProfile: Profile
 {
     public UserProfile()
     {
-        CreateMap<RegisterUserDTo, User>();
+        CreateMap<SignUpDTo, User>();
     }
 }

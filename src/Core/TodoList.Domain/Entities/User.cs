@@ -22,20 +22,20 @@ public class User: BaseEntity
         Password = password;
     }
 
-    public void SetCreationDate()
+    private void SetCreationDate()
     {
         CreatedAt = DateTime.Now;
     }
 
 
-    public void SetUpdateDate()
+    private void SetUpdateDate()
     {
         UpdatedAt = DateTime.Now;
     }
 
     public void SetCreateAndUpdateDate()
     {
-        if (this.Id == DefaultValues.IdNullValue)
+        if (Id == DefaultValues.IdNullValue)
         {
             SetCreationDate();
             SetUpdateDate();

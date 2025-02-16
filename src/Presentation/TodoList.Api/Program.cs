@@ -1,6 +1,7 @@
 using TodoList.Api.Filters;
 using TodoList.Api.Middlewares;
 using TodoList.Application;
+using TodoList.Application.ports.Repositories;
 using TodoList.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers(options => { options.Filters.Add<ValidateModelAttribute>(); });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var databaseInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
+    await databaseInitializer.InitializeDatabaseAsync();  // Chama a inicialização do banco de dados
+}
+
+
 
 // Registra o middleware de tratamento de erros
 app.UseMiddleware<ErrorHandlingMiddleware>();

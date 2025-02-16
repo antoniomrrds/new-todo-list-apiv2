@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image:  mysql:latest
+    image: mysql:latest
     container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -10,11 +10,12 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: pass123
       MYSQL_ROOT_HOST: '%'
+      TZ: 'America/Sao_Paulo'  # Configuração do fuso horário para Belo Horizonte
     volumes:
       - mysql-data:/var/lib/mysql
       - ./dump:/docker-entrypoint-initdb.d
     ports:
-      - 3306:3306
+      - "3306:3306"
     networks:
       - db-todo-list
     restart: always

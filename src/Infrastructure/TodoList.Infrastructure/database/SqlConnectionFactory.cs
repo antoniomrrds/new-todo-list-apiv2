@@ -13,4 +13,6 @@ public class SqlConnectionFactory(string connectionString) : IDbConnectionFactor
     {
         return new MySqlConnection(connectionString);
     }
+
+
 }
