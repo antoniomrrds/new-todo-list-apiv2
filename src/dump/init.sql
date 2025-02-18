@@ -94,15 +94,3 @@ CREATE TABLE IF NOT EXISTS tbl_todo_category
     FOREIGN KEY (ID_CATEGORY) REFERENCES tbl_category (ID) ON DELETE CASCADE
 );
 
--- Tabela de Refresh Tokens (para autenticação)
-CREATE TABLE IF NOT EXISTS tbl_refresh_tokens
-(
-    ID            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    ID_USER       INT UNSIGNED,                                                   -- Relacionamento com o usuário
-    REFRESH_TOKEN VARCHAR(500) NOT NULL,                                          -- Token de atualização
-    CREATED_AT    DATETIME DEFAULT CURRENT_TIMESTAMP,                             -- Data de criação do token
-    EXPIRES_AT    DATETIME DEFAULT DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),   -- Data de expiração do token (7 dias por exemplo)
-    UPDATED_AT    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Data de última atualização do token
-    FOREIGN KEY (ID_USER) REFERENCES tbl_user (ID) ON DELETE CASCADE
-);
-

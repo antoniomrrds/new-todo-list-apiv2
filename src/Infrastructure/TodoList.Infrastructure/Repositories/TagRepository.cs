@@ -13,14 +13,12 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
         var sql = new StringBuilder();
         sql.AppendLine("INSERT INTO tbl_tag(");
         sql.AppendLine("       NAME,        ");
-        sql.AppendLine("       COLOR,       ");
         sql.AppendLine("       DESCRIPTION, ");
         sql.AppendLine("       ACTIVE,      ");
         sql.AppendLine("       CREATED_AT,  ");
         sql.AppendLine("       UPDATED_AT   ");
         sql.AppendLine(") VALUES (");
         sql.AppendLine("       @Name,       ");
-        sql.AppendLine("       @Color,      ");
         sql.AppendLine("       @Description,");
         sql.AppendLine("       @Active,     ");
         sql.AppendLine("       @CreatedAt,  ");
@@ -40,7 +38,7 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
     {
         var sql = GetBaseQuery();
         sql.AppendLine("WHERE ID = @Id;");
-        
+
         var tag =  await databaseExecutor.ExecuteAsync(con =>
             con.QueryFirstOrDefaultAsync<Tag>(sql.ToString(), new { Id = id }));
         return tag ?? new Tag();
@@ -53,14 +51,13 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
         var sql = new StringBuilder();
         sql.AppendLine("UPDATE tbl_tag                    ");
         sql.AppendLine("   SET NAME = @Name,              ");
-        sql.AppendLine("       COLOR = @Color,            ");
         sql.AppendLine("       DESCRIPTION = @Description,");
         sql.AppendLine("       ACTIVE = @Active,          ");
         sql.AppendLine("       UPDATED_AT = @UpdatedAt    ");
         sql.AppendLine(" WHERE ID = @Id;                  ");
 
         return await databaseExecutor.ExecuteAsync(con => con.ExecuteScalarAsync<int>(sql.ToString(), tag));
-        
+
     }
 
     public  async Task<int> DeleteTagByIdAsync(int id)
@@ -68,16 +65,15 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
         var sql = new StringBuilder();
         sql.AppendLine("DELETE FROM tbl_tag");
         sql.AppendLine(" WHERE ID = @Id;");
-        return await databaseExecutor.ExecuteAsync(con =>  
+        return await databaseExecutor.ExecuteAsync(con =>
             con.ExecuteAsync(sql.ToString(), new { Id = id }));
     }
-    
+
     private static StringBuilder GetBaseQuery()
     {
         var sql = new StringBuilder();
         sql.AppendLine("SELECT ID,          ");
         sql.AppendLine("       NAME         AS Name,");
-        sql.AppendLine("       COLOR        AS Color,");
         sql.AppendLine("       DESCRIPTION  AS Description,");
         sql.AppendLine("       ACTIVE       AS Active,");
         sql.AppendLine("       CREATED_AT   AS CreatedAt,");

@@ -1,9 +1,11 @@
 using TodoList.Application.DTOs.User;
+using TodoList.Domain.Entities;
 
 namespace TodoList.Application.ports.Repositories;
 
 public interface IUserRepository
 {
     Task<bool> DoesEmailExist(string email);
-    Task<IEnumerable<UserRolesDTo>> GetUserRolesAsync(int idUser);
+    Task<UserRolesDTo> GetUserRolesAsync(int idUser);
+    Task<User> GetUserByEmailAsync(string email);
 }

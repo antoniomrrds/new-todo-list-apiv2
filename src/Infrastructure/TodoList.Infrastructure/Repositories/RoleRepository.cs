@@ -63,7 +63,8 @@ public class RoleRepository:IRoleRepository
        await connection.ExecuteAsync(sql.ToString(), new { UserId = userId, RoleId = roleId }, transaction);
    }
 
-   public async Task<int?> GetRoleIdByRoleTypeAsync(Roles roleType, IDbConnection connection, IDbTransaction transaction)
+   public async Task<int?> GetRoleIdByRoleTypeAsync(Roles roleType, IDbConnection connection,
+       IDbTransaction transaction)
    {
        var sql = new StringBuilder();
        sql.AppendLine("SELECT ID                   ");
@@ -72,5 +73,4 @@ public class RoleRepository:IRoleRepository
        sql.AppendLine("LIMIT 1;                    ");
        return await connection.QueryFirstOrDefaultAsync<int>(sql.ToString(), new { RoleType = roleType }, transaction);
    }
-
 }

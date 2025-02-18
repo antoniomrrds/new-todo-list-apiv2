@@ -1,12 +1,18 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Tag;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
+using TodoList.Domain.Extensions;
+using TodoList.Infrastructure.Helpers;
 
 namespace TodoList.Api.Controllers;
 
+
+[Authorize]
 [ApiController]
 [Route("api/tag")]
 public class TagController(ITagRepository tagRepository, IMapper mapper) : ControllerBase
@@ -15,7 +21,7 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
     public async Task<ActionResult<Tag>> GetId(int id)
     {
         var tag = await tagRepository.GetByIdAsync(id);
-        
+
         if (tag.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
@@ -24,6 +30,7 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
     }
 
     [HttpGet]
+    [CheckRoles(Roles.User)]
     public async Task<ActionResult<IEnumerable<Tag>>> GetAllAsync()
     {
         var tags = await tagRepository.GetAllAsync();
@@ -51,9 +58,9 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
             return NotFound();
         }
 
-        mapper.Map(updateTagDTo, existTag); 
+        mapper.Map(updateTagDTo, existTag);
        await tagRepository.UpdateAsync(existTag);
-       
+
         return Ok();
     }
 

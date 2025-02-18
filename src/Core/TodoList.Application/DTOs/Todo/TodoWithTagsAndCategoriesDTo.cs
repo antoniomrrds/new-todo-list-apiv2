@@ -1,6 +1,7 @@
 ﻿using TodoList.Domain.Constants;
 using TodoList.Domain.Enums;
 using TodoList.Domain.extensions;
+using TodoList.Domain.Extensions;
 using Entities = TodoList.Domain.Entities;
 namespace TodoList.Application.DTOs.Todo;
 
@@ -12,7 +13,7 @@ public  record TodoWithTagsAndCategoriesDTo
     public CompletionStatus IsCompleted { get; init; }
     public ActivationState Active { get; init; }
     public DateTime CreatedAt { get; init; }
-    public string StatusDescription => Status.GetName();
+    public string StatusDescription => Status.GetDescription();
     public TodoStatus Status { get; set; }
     public DateTime UpdatedAt { get; init; }
     public DateTime? ExpirationDate { get; init; }

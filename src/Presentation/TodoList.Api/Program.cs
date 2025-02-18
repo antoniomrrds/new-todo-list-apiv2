@@ -37,7 +37,7 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddControllers(options => { options.Filters.Add<ValidateModelAttribute>(); });
-
+builder.Services.AddAuthorization();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -60,8 +60,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("MyPolicy");
 
-app.UseAuthorization();
+// Configura o middleware de autenticação no pipeline de requisições HTTP.
+// A autenticação é o processo de verificar a identidade de um usuário ou entidade.
+// Garante que o usuário é quem ele diz ser, validando credenciais como nome de usuário e senha, tokens, certificados, etc.
+app.UseAuthentication();
 
+// Configura o middleware de autorização no pipeline de requisições HTTP.
+// A autorização é o processo de verificar se um usuário autenticado tem permissão para acessar um recurso ou realizar uma ação.
+// Garante que o usuário tem os direitos necessários para acessar recursos específicos, verificando permissões e roles associadas ao usuário.
+app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();

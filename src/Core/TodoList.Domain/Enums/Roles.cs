@@ -9,5 +9,6 @@ public enum Roles
 
     [Description("Administrador")]
     Admin = 1
-
 }
+
+

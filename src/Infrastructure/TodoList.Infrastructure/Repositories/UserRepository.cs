@@ -2,49 +2,89 @@ using System.Text;
 using Dapper;
 using TodoList.Application.DTOs.User;
 using TodoList.Application.ports.Repositories;
+using TodoList.Domain.Entities;
 
-namespace TodoList.Infrastructure.Repositories
+namespace TodoList.Infrastructure.Repositories;
+
+public class UserRepository : IUserRepository
 {
-    public class UserRepository : IUserRepository
+    private readonly IDatabaseExecutor _dataBaseExecutor;
+
+    public UserRepository(IDatabaseExecutor dataBaseExecutor)
     {
-        private readonly IDatabaseExecutor _dataBaseExecutor;
+        _dataBaseExecutor = dataBaseExecutor;
+    }
 
-        public UserRepository(IDatabaseExecutor dataBaseExecutor)
+    public async Task<bool> DoesEmailExist(string email)
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("SELECT EXISTS (         ");
+        sql.AppendLine("    SELECT 1            ");
+        sql.AppendLine("    FROM tbl_user       ");
+        sql.AppendLine("    WHERE email = @Email");
+        sql.AppendLine(") AS EmailExists;       ");
+
+        return await _dataBaseExecutor.ExecuteAsync<bool>(async con =>
+            await con.QueryFirstAsync<bool>(sql.ToString(), new { Email = email }));
+    }
+
+    public async Task<UserRolesDTo> GetUserRolesAsync(int idUser)
+    {
+        var sql = BuildUserQuery();
+        sql.AppendLine("FROM tbl_user TU ");
+        sql.AppendLine("WHERE TU.ID = @IdUser;");
+        sql.AppendLine();
+        sql.Append(GetRoles());
+
+        return await _dataBaseExecutor.ExecuteAsync<UserRolesDTo>(async con =>
         {
-            _dataBaseExecutor = dataBaseExecutor;
-        }
+            await using var multi = await con.QueryMultipleAsync(sql.ToString(), new { IdUser = idUser });
+            var user = await multi.ReadSingleOrDefaultAsync<UserRolesDTo>();
+            var roles = (await multi.ReadAsync<RolesDTO>()).ToList();
+            if (user is null) return new UserRolesDTo();
+            user.SetRoles(roles);
+            return user;
+        });
+    }
 
-        public async Task<bool> DoesEmailExist(string email)
-        {
-            var sql = new StringBuilder();
-            sql.AppendLine("SELECT EXISTS (         ");
-            sql.AppendLine("    SELECT 1            ");
-            sql.AppendLine("    FROM tbl_user       ");
-            sql.AppendLine("    WHERE email = @Email");
-            sql.AppendLine(") AS EmailExists;       ");
+    public Task<User> GetUserByEmailAsync(string email)
+    {
+        var sql = GetBaseQuery();
+        sql.AppendLine("WHERE TU.EMAIL = @Email;");
+        return _dataBaseExecutor.ExecuteAsync<User>(async con =>
+            await con.QueryFirstOrDefaultAsync<User>(sql.ToString(), new { Email = email }) ?? new User())
+     ;
+    }
 
-            return await _dataBaseExecutor.ExecuteAsync<bool>(async con =>
-                await con.QueryFirstAsync<bool>(sql.ToString(), new { Email = email }));
-        }
+    private static StringBuilder GetRoles()
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("SELECT                              ");
+        sql.AppendLine("       TR.ID        AS Id          ,");
+        sql.AppendLine("       TR.NAME      AS Name        ,");
+        sql.AppendLine("       TR.ROLE_TYPE AS RoleType     ");
+        sql.AppendLine("FROM tbl_role TR ");
+        sql.AppendLine("INNER JOIN tbl_user_role TUR ON (TUR.ID_ROLE = TR.ID)");
+        sql.AppendLine("WHERE TUR.ID_USER = @IdUser;");
+        return sql;
+    }
 
-        public async Task<IEnumerable<UserRolesDTo>> GetUserRolesAsync(int idUser)
-        {
-             var sql = new StringBuilder();
-             sql.AppendLine("SELECT TU.ID        AS Id         ,");
-             sql.AppendLine("       TU.NAME      AS Name       ,");
-             sql.AppendLine("       TU.EMAIL     AS Email      ,");
-             sql.AppendLine("       TU.ACTIVE    AS Active     ,");
-             sql.AppendLine("       TR.ID        AS IdRole     ,");
-             sql.AppendLine("       TR.NAME      AS RoleName   ,");
-             sql.AppendLine("       TR.ROLE_TYPE AS RoleType    ");
-             sql.AppendLine("FROM tbl_user TU ");
-             sql.AppendLine("INNER JOIN tbl_user_role TUR ON (TUR.ID_USER = TU.ID)");
-             sql.AppendLine("INNER JOIN tbl_role TR       ON (TR.ID = TUR.ID_ROLE)");
-             sql.AppendLine("WHERE TU.ID = @IdUser;");
-             var result = await _dataBaseExecutor.ExecuteAsync(async con =>
-                 await con.QueryAsync<UserRolesDTo>(sql.ToString(), new { IdUser = idUser })) ;
-
-             return result;
-        }
+    private static StringBuilder BuildUserQuery()
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("SELECT TU.ID        AS Id         ,");
+        sql.AppendLine("       TU.NAME      AS Name       ,");
+        sql.AppendLine("       TU.EMAIL     AS Email      ,");
+        sql.AppendLine("       TU.ACTIVE    AS Active     ");
+        return sql;
+    }
+    private static StringBuilder GetBaseQuery()
+    {
+        var sql = BuildUserQuery();
+        sql.AppendLine(",       TU.PASSWORD  AS Password   ");
+        sql.AppendLine(",       TU.CREATED_AT AS CreatedAt ");
+        sql.AppendLine(",       TU.UPDATED_AT AS UpdatedAt ");
+        sql.AppendLine("FROM tbl_user TU ");
+        return sql;
     }
 }

@@ -1,13 +1,18 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Category;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
+using TodoList.Domain.extensions;
+using TodoList.Infrastructure.Helpers;
 
 namespace TodoList.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/category")]
 public class CategoryController(ICategoryRepository categoryRepository, IMapper mapper) : ControllerBase
 {
@@ -23,6 +28,7 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         return Ok(category);
     }
 
+    [CheckRoles(Roles.Admin)]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Category>>> GetAllAsync()
     {
@@ -45,12 +51,12 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         if (exist.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
-        } 
+        }
         mapper.Map(updateCategoryDTo, exist);
         await categoryRepository.UpdateAsync(exist);
         return Ok();
     }
-    
+
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Category>> DeleteAsync(int id)
     {
@@ -58,9 +64,9 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         if (exist.Id == DefaultValues.IdNullValue)
         {
             return NotFound();
-        } 
+        }
         await categoryRepository.DeleteCategoryByIdAsync(id);
         return NoContent();
     }
-    
+
 }

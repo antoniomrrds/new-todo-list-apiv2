@@ -53,4 +53,25 @@ public class AuthRepository:IAuthRepository
             return userId;
         });
     }
+
+    // public Task<string> GenerateRefreshTokenAsync(int idUser )
+    // {
+    //     var sql = new StringBuilder();
+    //     sql.AppendLine("INSERT INTO tbl_refresh_token( ");
+    //     sql.AppendLine("       ID_USER,                 ");
+    //     sql.AppendLine("       REFRESH_TOKEN,           ");
+    //     sql.AppendLine("       CREATED_AT               ");
+    //     sql.AppendLine("       UPDATED_AT               ");
+    //     sql.AppendLine("       EXPIRATION_AT            ");
+    //     sql.AppendLine(") VALUES (                      ");
+    //     sql.AppendLine("       @IdUser,                 ");
+    //     sql.AppendLine("       @RefreshToken,           ");
+    //     sql.AppendLine("       @CreatedAt               ");
+    //     sql.AppendLine("       @UpdatedAt               ");
+    //     sql.AppendLine("       @ExpirationAt            ");
+    //     sql.AppendLine(");                              ");
+    //     sql.AppendLine("SELECT LAST_INSERT_ID();       ");
+    //     return _dataBaseExecutor.
+    //
+    // }
 }

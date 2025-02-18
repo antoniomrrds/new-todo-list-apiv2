@@ -10,5 +10,4 @@ public interface IRoleRepository
     public Task<int> CreateAsync(Role role, IDbConnection connection, IDbTransaction transaction);
     public Task AssociateRoleToUserAsync(int userId, int roleId, IDbConnection connection, IDbTransaction transaction);
     public Task<int?> GetRoleIdByRoleTypeAsync(Roles roleType, IDbConnection connection, IDbTransaction transaction);
-
 }

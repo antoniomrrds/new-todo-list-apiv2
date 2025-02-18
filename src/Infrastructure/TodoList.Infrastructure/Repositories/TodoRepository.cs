@@ -7,6 +7,7 @@ using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
 using TodoList.Domain.Enums;
 using TodoList.Domain.extensions;
+using TodoList.Domain.Extensions;
 
 namespace TodoList.Infrastructure.Repositories;
 
@@ -350,7 +351,6 @@ private static StringBuilder GetTodoStatusCase()
         var sql = new StringBuilder();
         sql.AppendLine("SELECT TG.ID          AS Id,                 ");
         sql.AppendLine("       TG.NAME        AS Name,               ");
-        sql.AppendLine("       TG.COLOR       AS Color,              ");
         sql.AppendLine("       TG.DESCRIPTION AS Description,        ");
         sql.AppendLine("       TG.ACTIVE      AS Active,             ");
         sql.AppendLine("       TG.CREATED_AT  AS CreatedAt,          ");
