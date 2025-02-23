@@ -1,10 +1,15 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoList.Api.Helpers;
 using TodoList.Application.DTOs.Auth;
+using TodoList.Application.Factories;
 using TodoList.Application.ports.Repositories;
 using TodoList.Application.Ports.Security;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
+using TodoList.Infrastructure.Helpers;
 using TodoList.Infrastructure.Security;
 
 namespace TodoList.Api.Controllers;
@@ -32,46 +37,60 @@ public sealed class AuthController : ControllerBase
     [HttpPost("sign-up")]
     public async Task<ActionResult> SignUp(SignUpDTo signUpDTo)
     {
-         var bcryptAdapter = new BcryptAdapter();
-         var passwordHasher =  bcryptAdapter.Hash(signUpDTo.Password);
-         signUpDTo.Password = passwordHasher;
-         var user = _mapper.Map<User>(signUpDTo);
-         await _authRepository.SignUpUserAsync(user);
-         return NoContent();
+        var bcryptAdapter = new BcryptAdapter();
+        var passwordHasher = bcryptAdapter.Hash(signUpDTo.Password);
+        signUpDTo.Password = passwordHasher;
+        var user = _mapper.Map<User>(signUpDTo);
+        await _authRepository.SignUpUserAsync(user);
+        return NoContent();
     }
 
     [HttpPost("sign-in")]
-    public async Task<ActionResult<SignInResponseDTo>> SignIn(SignInDTo signInDTo)
+    public async Task<ActionResult> SignIn(SignInDTo signInDTo)
     {
         var user = await _userRepository.GetUserByEmailAsync(signInDTo.Email);
         if (user.Id == DefaultValues.IdNullValue)
         {
-            return BadRequest("E-mail informado não encontrado.");
+            var errors = new Dictionary<string, List<string>>
+            {
+                { "Email", ["Usuário não encontrado."] }
+            };
+
+            return BadRequestResponseFactory.CreateBadRequestResponse("A solicitação contém erros de validação.", errors);
         }
 
         var bcryptAdapter = new BcryptAdapter();
         var passwordIsValid = bcryptAdapter.Verify(signInDTo.Password, user.Password);
         if (!passwordIsValid)
         {
-            return BadRequest("Senha inválida.");
+            var errors = new Dictionary<string, List<string>>
+            {
+                { "Senha", ["Senha incorreta."] }
+            };
+            return BadRequestResponseFactory.CreateBadRequestResponse("A solicitação contém erros de validação.", errors);
         }
 
         var userRoles = await _userRepository.GetUserRolesAsync(user.Id);
         var token = _tokenGenerator.Generate(userRoles);
         var refreshToken = _tokenGenerator.GenerateRefreshToken(userRoles);
-        return Ok(new SignInResponseDTo(token , refreshToken));
-    }
 
-    [HttpPost("refresh-token")]
-    public async Task<ActionResult<SignInResponseDTo>> RefreshToken(RefreshTokenDTo refreshTokenDTo)
+        // Usando o CookieHelper para definir os cookies
+        var roles  = userRoles.Roles.Select(r => r.RoleType).ToArray();
+
+        var sessionData = new SessionData(user.Name, user.Email, roles);
+        CookieHelper.SetAuthCookies(Response, token, refreshToken, sessionData);
+
+        return Ok();
+    }
+    [Authorize]
+    [HttpGet("is-logged-in")]
+    public IActionResult IsLoggedIn() =>  NoContent();
+
+    [HttpGet("sign-out")]
+    public IActionResult LogOut()
     {
-        var (isValid ,idUser) = await _tokenGenerator.ValidateToken(refreshTokenDTo.RefreshToken);
-        if (isValid == false)
-            return Unauthorized();
-
-        var userRoles = await _userRepository.GetUserRolesAsync(idUser);
-        var token = _tokenGenerator.Generate(userRoles);
-        var refreshToken = _tokenGenerator.GenerateRefreshToken(userRoles);
-        return Ok(new SignInResponseDTo(token , refreshToken));
+        CookieHelper.ClearCookiesAuth(Response);
+        return NoContent();
     }
+
 }

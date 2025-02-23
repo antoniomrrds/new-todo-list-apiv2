@@ -9,10 +9,10 @@ public abstract class TodoDToValidatorBase<T> : AbstractValidator<T> where T : I
 {
     protected TodoDToValidatorBase()
     {
-        RuleFor(x => x.Title)
-            .NotEmpty().WithMessage("O título é obrigatório.")
-            .MinimumLength(5).WithMessage("O título deve ter no mínimo 5 caracteres.");
-        
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("O nome é obrigatório.")
+            .MinimumLength(5).WithMessage("O nome deve ter no mínimo 5 caracteres.");
+
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("A descrição é obrigatória.")
             .MinimumLength(5).WithMessage("A descrição deve ter no mínimo 5 caracteres.");
@@ -29,14 +29,14 @@ public abstract class TodoDToBaseWithTagAndCategoryIds<T> : TodoDToValidatorBase
 {
     protected TodoDToBaseWithTagAndCategoryIds(ITagRepository tagRepository, ICategoryRepository categoryRepository)
     {
-        
+
         RuleFor(x => x.IdTags)
             .CustomAsync(async (tags, context, _) => await IsAllPresent(tags, context, tagRepository, "tags"));
 
         RuleFor(x => x.IdCategories)
             .CustomAsync(async (categories, context, _) => await IsAllPresent(categories, context, categoryRepository, "categorias"));
     }
-    
+
     private static async Task IsAllPresent(List<int>? ids,  ValidationContext<T>  ctx ,IEntityExistenceCheckerRepository entityExistenceCheckerRepository,string entityName )
     {
         if (ids == null || ids.Count == 0) return ;

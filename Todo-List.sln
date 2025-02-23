@@ -14,6 +14,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{3A3904A5-3A9D-492F-B2FE-7833F6D4ABAF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F238CA79-AE06-4237-B786-10E370860DF9}"
+	ProjectSection(SolutionItems) = preProject
+		src\create_blob_container.sh = src\create_blob_container.sh
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{E18C6EA6-1500-4798-A2BA-8231E24174D0}"
 EndProject

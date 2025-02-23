@@ -56,6 +56,15 @@ public class UserRepository : IUserRepository
      ;
     }
 
+    public Task<User> GetUserByIdAsync(int id)
+    {
+        var sql = GetBaseQuery();
+        sql.AppendLine("WHERE TU.ID = @Id;");
+        return _dataBaseExecutor.ExecuteAsync<User>(async con =>
+            await con.QueryFirstOrDefaultAsync<User>(sql.ToString(), new { Id = id }) ?? new User());
+    }
+
+
     private static StringBuilder GetRoles()
     {
         var sql = new StringBuilder();

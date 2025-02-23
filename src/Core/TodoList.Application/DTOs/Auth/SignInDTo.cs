@@ -1,3 +1,5 @@
+using TodoList.Domain.Enums;
+
 namespace TodoList.Application.DTOs.Auth;
 
 public record SignInDTo
@@ -6,6 +8,7 @@ public record SignInDTo
     public string Password { get; set; } = string.Empty;
 }
 
-public record SignInResponseDTo(string Token, string RefreshToken);
+public record SignInResponseDTo(string Token);
 
+public record SessionData(string Name, string Email, Roles[] Roles );
 

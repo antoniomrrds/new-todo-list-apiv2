@@ -16,6 +16,7 @@ namespace TodoList.Api.Controllers;
 [Route("api/category")]
 public class CategoryController(ICategoryRepository categoryRepository, IMapper mapper) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Category>> GetId(int id)
     {
@@ -28,7 +29,7 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         return Ok(category);
     }
 
-    [CheckRoles(Roles.Admin)]
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Category>>> GetAllAsync()
     {
@@ -36,6 +37,7 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         return Ok(categories);
     }
 
+    [CheckRoles(Roles.Admin)]
     [HttpPost]
     public async Task<ActionResult<Category>> CreateAsync(CreateCategoryDTo category)
     {
@@ -44,6 +46,7 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         return CreatedAtAction(nameof(GetId), new { id  }, null);
     }
 
+    [CheckRoles(Roles.Admin)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<Category>> UpdateAsync(int id,UpdateCategoryDTo updateCategoryDTo)
     {
@@ -57,6 +60,7 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         return Ok();
     }
 
+    [CheckRoles(Roles.Admin)]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<Category>> DeleteAsync(int id)
     {

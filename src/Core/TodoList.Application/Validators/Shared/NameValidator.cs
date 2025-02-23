@@ -8,7 +8,7 @@ namespace TodoList.Application.Validators.Shared
         {
             RuleFor(x => x)
                 .NotEmpty().WithMessage("O nome é obrigatório.")
-                .MinimumLength(5).WithMessage("O nome deve ter no mínimo 5 caracteres.")
+                .MinimumLength(3).WithMessage("O nome deve ter no mínimo 3 caracteres.")
                 .SetValidator(new NoWhiteSpaceValidator());
         }
     }

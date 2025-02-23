@@ -7,7 +7,7 @@ namespace TodoList.Domain.Entities;
 
 public interface ITodo
 {
-    string Title { get; set; }
+    string Name { get; set; }
     string Description { get; set; }
     CompletionStatus IsCompleted { get; set; }
     DateTime? ExpirationDate { get; set; }
@@ -16,7 +16,11 @@ public interface ITodo
 
 public sealed class Todo : BaseEntity , ITodo
 {
-    public string Title { get; set; } = string.Empty;
+    public int IdUser { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+
     public string Description { get; set; } = string.Empty;
     public CompletionStatus IsCompleted { get; set; }
     public ActivationState Active { get; set; }

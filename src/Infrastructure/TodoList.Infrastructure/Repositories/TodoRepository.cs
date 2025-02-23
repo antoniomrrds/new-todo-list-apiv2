@@ -6,7 +6,6 @@ using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
 using TodoList.Domain.Enums;
-using TodoList.Domain.extensions;
 using TodoList.Domain.Extensions;
 
 namespace TodoList.Infrastructure.Repositories;
@@ -22,14 +21,16 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
         sql.AppendLine("       NAME,                           ");
         sql.AppendLine("       DESCRIPTION,                    ");
         sql.AppendLine("       IS_COMPLETED,                   ");
+        sql.AppendLine("       ID_USER,                        ");
         sql.AppendLine("       ACTIVE,                         ");
         sql.AppendLine("       CREATED_AT,                     ");
         sql.AppendLine("       UPDATED_AT,                     ");
         sql.AppendLine("       EXPIRATION_DATE                 ");
         sql.AppendLine(") VALUES (                             ");
-        sql.AppendLine("       @Name,                         ");
+        sql.AppendLine("       @Name,                          ");
         sql.AppendLine("       @Description,                   ");
         sql.AppendLine("       @IsCompleted,                   ");
+        sql.AppendLine("       @IdUser,                        ");
         sql.AppendLine("       @Active,                        ");
         sql.AppendLine("       @CreatedAt,                     ");
         sql.AppendLine("       @UpdatedAt,                     ");
@@ -82,7 +83,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
             return new TodoWithTagAndCategoryIdsDto
             {
                 Id = todo.Id,
-                Title = todo.Title,
+                Name = todo.Name,
                 Description = todo.Description,
                 IsCompleted = todo.IsCompleted,
                 Active = todo.Active,
@@ -121,7 +122,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
             return new TodoWithTagsAndCategoriesDTo
             {
                 Id = todo.Id,
-                Title = todo.Title,
+                Name = todo.Name,
                 Description = todo.Description,
                 IsCompleted = todo.IsCompleted,
                 Active = todo.Active,
@@ -236,7 +237,7 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
         var result = await databaseExecutor.ExecuteAsync(
             async con =>
             {
-                await using var multi = await con.QueryMultipleAsync(sqlCountPage.ToString());
+                await using var multi = await con.QueryMultipleAsync(sqlCountPage.ToString() ,new  { IdUser = filter.IdUser });
 
                 var totalItems = (await multi.ReadAsync<int>()).FirstOrDefault();
                 var items = (await multi.ReadAsync<Todo>()).ToList();
@@ -310,7 +311,10 @@ private static StringBuilder GetBaseQuery()
 {
     var sql = new StringBuilder();
     sql.AppendLine("SELECT TD.ID                                 AS Id,                                   ");
-    sql.AppendLine("       TD.NAME                               AS Name,                                ");
+    sql.AppendLine("       TD.ID_USER                            AS IdUser,                               ");
+    sql.AppendLine("       TU.NAME                               AS UserName,                             ");
+    sql.AppendLine("       TU.EMAIL                              AS UserEmail,                            ");
+    sql.AppendLine("       TD.NAME                               AS Name,                                 ");
     sql.AppendLine("       TD.DESCRIPTION                        AS Description,                          ");
     sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                          ");
     sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                       ");
@@ -322,6 +326,7 @@ private static StringBuilder GetBaseQuery()
     sql.AppendLine("       DATE_FORMAT(TD.UPDATED_AT, '%d/%m/%Y %H:%i') AS UpdatedAtFormatted,            ");
     sql.AppendLine("       DATE_FORMAT(TD.EXPIRATION_DATE, '%d/%m/%Y %H:%i') AS ExpirationDateFormatted   ");
     sql.AppendLine("FROM tbl_todo TD                                                                      ");
+    sql.AppendLine("JOIN tbl_user TU ON(TU.ID = TD.ID_USER)                                               ");
 
     return sql;
 }
@@ -412,6 +417,11 @@ private static StringBuilder GetFilteredQuery(ToDoFilterDTo filter)
         sql.AppendLine($"TD.ACTIVE = {filter.Active.ToInt()}");
     }
 
+    if (filter.IdUser != DefaultValues.IdNullValue)
+    {
+        sql.Append(sql.Length > 0 ? "AND " : "WHERE ");
+        sql.AppendLine("TD.ID_USER = @IdUser");
+    }
 
     return sql;
 }

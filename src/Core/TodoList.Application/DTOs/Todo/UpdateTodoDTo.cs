@@ -7,7 +7,7 @@ namespace TodoList.Application.DTOs.Todo;
 public class UpdateTodoDTo:TagAndCategoryIdsDto , ITodo
 {
     public int Id { get; init; }
-    public string Title { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public CompletionStatus IsCompleted { get; set; }
     public DateTime? ExpirationDate { get; set; }

@@ -1,27 +1,34 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Filters;
+using TodoList.Application.Factories; // Adicionando o namespace da nova classe
 using TodoList.Domain.Constants;
 
 namespace TodoList.Api.Filters
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
-    public class ValidateModelAttribute(ILogger<ValidateModelAttribute> logger) : ActionFilterAttribute
+    public class ValidateModelAttribute : ActionFilterAttribute
     {
+        private readonly ILogger<ValidateModelAttribute> _logger;
+
+        public ValidateModelAttribute(ILogger<ValidateModelAttribute> logger)
+        {
+            _logger = logger;
+        }
+
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var modelStateErrors = GetModelStateErrors(context);
 
             if (modelStateErrors.Count != 0)
             {
-                context.Result = CreateBadRequestResponse("Os dados enviados não estão corretos. Verifique o modelo e tente novamente.", modelStateErrors);
+                // Usando a classe BadRequestResponseFactory para criar a resposta
+                context.Result = BadRequestResponseFactory.CreateBadRequestResponse("Os dados enviados não estão corretos. Verifique o modelo e tente novamente.", modelStateErrors);
                 return;
             }
 
             ValidateActionArguments(context).GetAwaiter().GetResult();
         }
 
-        // Static method, no need for instance-specific state
         private static Dictionary<string, List<string>> GetModelStateErrors(ActionExecutingContext context)
         {
             var errors = new Dictionary<string, List<string>>();
@@ -54,7 +61,7 @@ namespace TodoList.Api.Filters
                 var validator = GetValidator(arg.GetType(), context);
                 if (validator == null)
                 {
-                    logger.LogWarning("Nenhum validador encontrado para o tipo {Name}", arg.GetType().Name);
+                    _logger.LogWarning("Nenhum validador encontrado para o tipo {Name}", arg.GetType().Name);
                     continue;
                 }
 
@@ -62,7 +69,7 @@ namespace TodoList.Api.Filters
                 if (validationResult.IsValid) continue;
 
                 var errors = ExtractErrors(validationResult);
-                context.Result = CreateBadRequestResponse("A solicitação contém erros de validação.", errors);
+                context.Result = BadRequestResponseFactory.CreateBadRequestResponse("A solicitação contém erros de validação.", errors);
                 return;
             }
         }
@@ -78,17 +85,6 @@ namespace TodoList.Api.Filters
             return validationResult.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToList());
-        }
-
-        private static BadRequestObjectResult CreateBadRequestResponse(string message, Dictionary<string, List<string>> errors)
-        {
-            return new BadRequestObjectResult(new
-            {
-                success = false,
-                statusCode = StatusCodes.Status400BadRequest,
-                message,
-                errors
-            });
         }
     }
 }

@@ -6,17 +6,16 @@ using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
 using TodoList.Domain.Enums;
-using TodoList.Domain.Extensions;
 using TodoList.Infrastructure.Helpers;
 
 namespace TodoList.Api.Controllers;
-
 
 [Authorize]
 [ApiController]
 [Route("api/tag")]
 public class TagController(ITagRepository tagRepository, IMapper mapper) : ControllerBase
 {
+  [AllowAnonymous]
   [HttpGet("{id:int}")]
     public async Task<ActionResult<Tag>> GetId(int id)
     {
@@ -29,15 +28,15 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
         return Ok(tag);
     }
 
+    [AllowAnonymous]
     [HttpGet]
-    [CheckRoles(Roles.User)]
     public async Task<ActionResult<IEnumerable<Tag>>> GetAllAsync()
     {
         var tags = await tagRepository.GetAllAsync();
         return Ok(tags);
     }
-
     [HttpPost]
+    [CheckRoles(Roles.Admin)]
     public async Task<ActionResult<Tag>> CreateAsync(CreateTagDTo createTagDTo)
     {
         var tag = mapper.Map<Tag>(createTagDTo);
@@ -50,6 +49,7 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
     }
 
     [HttpPut("{id:int}")]
+    [CheckRoles(Roles.Admin)]
     public async Task<ActionResult<Tag>> UpdateAsync(int id , UpdateTagDTo updateTagDTo)
     {
         var existTag = await tagRepository.GetByIdAsync(id);
@@ -65,6 +65,7 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
     }
 
     [HttpDelete("{id:int}")]
+    [CheckRoles(Roles.Admin)]
     public async Task<ActionResult> DeleteAsync(int id)
     {
         var existTag = await tagRepository.GetByIdAsync(id);

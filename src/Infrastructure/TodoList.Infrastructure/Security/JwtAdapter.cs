@@ -6,7 +6,6 @@ using Microsoft.IdentityModel.Tokens;
 using TodoList.Application.DTOs.User;
 using TodoList.Application.Ports.Security;
 using TodoList.Domain.Constants;
-using TodoList.Domain.Extensions;
 using TodoList.Infrastructure.Helpers;
 
 namespace TodoList.Infrastructure.Security;

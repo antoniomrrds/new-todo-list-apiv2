@@ -1,6 +1,20 @@
 version: "3.9"
 
 services:
+  # Serviço do Azurite (Emulador de Azure Storage)
+  runtrackr-blob-storage:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: runtrackr.blob-storage
+    volumes:
+      - ./.containers/blob_storage/data:/data
+    ports:
+      - "10000:10000"  # Porta para o serviço de Blob
+    restart: always
+    command: "azurite-blob --blobHost 0.0.0.0 -l /data"  # Alterado para formato de string
+    networks:
+      - db-todo-list  # Adiciona à rede comum
+
+  # Serviço do MySQL (Banco de dados)
   db:
     image: mysql:latest
     container_name: mysql-db
@@ -13,11 +27,11 @@ services:
       TZ: 'America/Sao_Paulo'  # Configuração do fuso horário para Belo Horizonte
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./dump:/docker-entrypoint-initdb.d
+      - ./dump:/docker-entrypoint-initdb.d  # Caso você tenha algum dump de banco
     ports:
       - "3306:3306"
     networks:
-      - db-todo-list
+      - db-todo-list  # Adiciona à mesma rede
     restart: always
 
 networks:
@@ -26,8 +40,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: "111.111.10.0/24"
+        - subnet: "111.111.10.0/24"  # Rede personalizada
 
 volumes:
   mysql-data:
-    driver: local
+    driver: local  # Volume persistente para o MySQL

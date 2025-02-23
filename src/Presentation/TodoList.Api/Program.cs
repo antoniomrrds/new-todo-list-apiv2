@@ -6,6 +6,21 @@ using TodoList.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
+
+
+// builder.Services.AddCors(options =>
+// {
+//   options.AddPolicy("Policy", policy =>
+//   {
+//     policy
+//         .AllowAnyOrigin()       // Permite qualquer origem
+//         .AllowAnyHeader()       // Permite qualquer cabeçalho
+//         .AllowAnyMethod()       // Permite qualquer método
+//         .WithExposedHeaders("Location");  // Expõe o cabeçalho Location
+//   });
+// });
 // Adiciona serviços ao contêiner.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -15,24 +30,27 @@ builder.Services.AddApplication();
 builder.Services.AddScoped<ValidateModelAttribute>();
 // Configura o roteamento para usar URLs e strings de consulta em minúsculas
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "MyPolicy",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials()
+                .WithExposedHeaders("Location");  // Expõe o cabeçalho Location
+        });
+});
+
+
 builder.Services.AddRouting(
     options =>
   {
     options.LowercaseUrls = true;
     options.LowercaseQueryStrings = true;
   });
-
-builder.Services.AddCors(options =>
-{
-  options.AddPolicy("MyPolicy", policy =>
-  {
-    policy
-        .AllowAnyOrigin()       // Permite qualquer origem
-        .AllowAnyHeader()       // Permite qualquer cabeçalho
-        .AllowAnyMethod()       // Permite qualquer método
-        .WithExposedHeaders("Location");  // Expõe o cabeçalho Location
-  });
-});
 
 
 
@@ -47,9 +65,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 
+// app.UseHttpsRedirection();
 
+app.UseCors("MyPolicy");
 // Registra o middleware de tratamento de erros
 app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<TokenRefreshMiddleware>();
+
 
 // Configura o pipeline de requisições HTTP.
 if (app.Environment.IsDevelopment())
@@ -58,7 +80,7 @@ if (app.Environment.IsDevelopment())
   app.UseSwaggerUI();
 }
 
-app.UseCors("MyPolicy");
+
 
 // Configura o middleware de autenticação no pipeline de requisições HTTP.
 // A autenticação é o processo de verificar a identidade de um usuário ou entidade.

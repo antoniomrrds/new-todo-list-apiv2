@@ -5,7 +5,7 @@ namespace TodoList.Application.DTOs.Todo;
 public class TodoWithTagAndCategoryIdsDto: TagAndCategoryIdsDto
 {
     public int Id { get; set; }
-    public string Title { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public CompletionStatus IsCompleted { get; set; }
     public ActivationState Active { get; set; }

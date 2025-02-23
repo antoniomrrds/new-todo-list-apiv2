@@ -6,6 +6,7 @@ namespace TodoList.Application.DTOs.Todo;
 public class ToDoFilterDTo
 {
     public int Page { get; set; }
+    public int IdUser { get; set; }
     public string Name { get; set; } = string.Empty;
     public TodoStatus Status { get; set; } = TodoStatus.InProgress;
     public int PageSize { get; set; }
