@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Linq;
 
 namespace TodoList.Domain.Extensions
 {
@@ -47,8 +46,8 @@ namespace TodoList.Domain.Extensions
     public class UserDataClaim
     {
         public int IdUser { get; set; }
-        public string Email { get; set; }
-        public string Name { get; set; }
-        public string Role { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
     }
 }

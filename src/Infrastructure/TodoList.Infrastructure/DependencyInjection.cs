@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseExecutor, DatabaseExecutor>();
         services.AddScoped<ITokenGenerator, JwtAdapter>();
         services.AddSingleton<IBlobService , BlobService>();
+        services.AddScoped<IHasher<string>, BcryptAdapter>();
         services.AddSingleton(_ => new BlobServiceClient(configuration.GetConnectionString("BlobStorage")));
         services.AddScoped<IDbConnection>(serviceProvider =>
         {

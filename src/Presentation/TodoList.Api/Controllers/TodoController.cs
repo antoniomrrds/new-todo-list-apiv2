@@ -33,7 +33,8 @@ public class TodoController(ITodoRepository todoRepository, IMapper mapper)
     {
         var pagination =
             PaginationHelper.CalculatePagination(filter.Page,
-                filter.PageSize); filter.IdUser = User.GetId();
+                filter.PageSize);
+        filter.IdUser = User.GetId();
         var (todos, totalItems) = await todoRepository.FindByFilter(filter,
             pagination.Start, pagination.PageSize);
         var model =

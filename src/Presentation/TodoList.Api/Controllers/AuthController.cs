@@ -8,9 +8,7 @@ using TodoList.Application.ports.Repositories;
 using TodoList.Application.Ports.Security;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
-using TodoList.Domain.Enums;
-using TodoList.Infrastructure.Helpers;
-using TodoList.Infrastructure.Security;
+
 
 namespace TodoList.Api.Controllers;
 
@@ -22,23 +20,26 @@ public sealed class AuthController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IUserRepository _userRepository;
     private readonly ITokenGenerator _tokenGenerator;
+    private readonly IHasher<string> _hasher;
 
     public AuthController(IAuthRepository authRepository,
                           IMapper mapper,
                           IUserRepository userRepository,
-                          ITokenGenerator tokenGenerator)
+                          ITokenGenerator tokenGenerator,
+                          IHasher<string> hasher)
     {
         _authRepository = authRepository;
         _userRepository = userRepository;
         _mapper = mapper;
         _tokenGenerator = tokenGenerator;
+        _hasher = hasher;
     }
 
     [HttpPost("sign-up")]
     public async Task<ActionResult> SignUp(SignUpDTo signUpDTo)
     {
-        var bcryptAdapter = new BcryptAdapter();
-        var passwordHasher = bcryptAdapter.Hash(signUpDTo.Password);
+
+        var passwordHasher = _hasher.Hash(signUpDTo.Password);
         signUpDTo.Password = passwordHasher;
         var user = _mapper.Map<User>(signUpDTo);
         await _authRepository.SignUpUserAsync(user);
@@ -59,8 +60,7 @@ public sealed class AuthController : ControllerBase
             return BadRequestResponseFactory.CreateBadRequestResponse("A solicitação contém erros de validação.", errors);
         }
 
-        var bcryptAdapter = new BcryptAdapter();
-        var passwordIsValid = bcryptAdapter.Verify(signInDTo.Password, user.Password);
+        var passwordIsValid = _hasher.Verify(signInDTo.Password, user.Password);
         if (!passwordIsValid)
         {
             var errors = new Dictionary<string, List<string>>

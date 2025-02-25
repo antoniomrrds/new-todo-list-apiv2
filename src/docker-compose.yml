@@ -6,7 +6,7 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite:latest
     container_name: runtrackr.blob-storage
     volumes:
-      - ./.containers/blob_storage/data:/data
+      - containers/blob_storage/data:/data
     ports:
       - "10000:10000"  # Porta para o serviço de Blob
     restart: always

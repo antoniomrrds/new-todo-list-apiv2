@@ -64,6 +64,16 @@ public class UserRepository : IUserRepository
             await con.QueryFirstOrDefaultAsync<User>(sql.ToString(), new { Id = id }) ?? new User());
     }
 
+    public Task ChangePasswordAsync(int id, string password)
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("UPDATE tbl_user ");
+        sql.AppendLine("SET PASSWORD = @Password ");
+        sql.AppendLine("WHERE ID = @Id;");
+        return _dataBaseExecutor.ExecuteAsync(async con =>
+            await con.ExecuteAsync(sql.ToString(), new { Id = id, Password = password }));
+    }
+
 
     private static StringBuilder GetRoles()
     {
@@ -90,7 +100,7 @@ public class UserRepository : IUserRepository
     private static StringBuilder GetBaseQuery()
     {
         var sql = BuildUserQuery();
-        sql.AppendLine(",       TU.PASSWORD  AS Password   ");
+        sql.AppendLine(",       TU.PASSWORD AS Password   ");
         sql.AppendLine(",       TU.CREATED_AT AS CreatedAt ");
         sql.AppendLine(",       TU.UPDATED_AT AS UpdatedAt ");
         sql.AppendLine("FROM tbl_user TU ");
