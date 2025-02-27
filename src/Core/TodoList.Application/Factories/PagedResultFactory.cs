@@ -9,7 +9,7 @@ public static class PagedResultFactory
     {
         return new PagedResultDTo<T>
         {
-            Items = items,
+            Items = items ?? [],
             Page = paginationInfo.Page,
             PageSize = paginationInfo.PageSize,
             TotalPages = paginationInfo.CalculateTotalPages(totalItems),

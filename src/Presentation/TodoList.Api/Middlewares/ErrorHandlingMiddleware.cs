@@ -1,11 +1,5 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
 namespace TodoList.Api.Middlewares;
 
 public class ErrorHandlingMiddleware
@@ -35,24 +29,27 @@ public class ErrorHandlingMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        _logger.LogError(ex, "Server failed. Try again soon");
+        var traceId = Guid.NewGuid().ToString();
+        _logger.LogError(ex, "Server failed. TraceId: {TraceId}", traceId);
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+    var errorResponse = _env.IsDevelopment()
+    ? new Dictionary<string, object>
+    {
+        { "traceId", traceId },
+        { "status", context.Response.StatusCode },
+        { "message", "An unexpected error occurred." },
+        { "error", ex.Message },
+        { "stackTrace", ex.StackTrace }
+    }
+    : new Dictionary<string, object>
+    {
+        { "traceId", traceId },
+        { "status", context.Response.StatusCode },
+        { "message", "An unexpected error occurred." }
+    };
 
-        var result = _env.IsDevelopment()
-            ? JsonSerializer.Serialize(new
-            {
-                status = context.Response.StatusCode,
-                message = "Server failed. Try again soon.",
-                error = ex.Message, 
-            })
-            : JsonSerializer.Serialize(new
-            {
-                statusCode = context.Response.StatusCode,
-                message = "Server failed. Try again soon."
-            });
-
-        return context.Response.WriteAsync(result);
+        return context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
     }
 }

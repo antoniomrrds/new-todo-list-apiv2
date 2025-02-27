@@ -1,7 +1,10 @@
 ﻿using System.Text;
 using Dapper;
+using TodoList.Application.DTOs.Tag;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Entities;
+using TodoList.Domain.Enums;
+using TodoList.Domain.Extensions;
 
 namespace TodoList.Infrastructure.Repositories;
 
@@ -44,6 +47,34 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
         return tag ?? new Tag();
     }
 
+    public async Task<(IEnumerable<Tag> Items, int TotalItems)> FindByFilter(TagFilterDTo filter, int start = 0, int offset = 0)
+    {
+        var sqlCountPage = new StringBuilder();
+        sqlCountPage.AppendLine("SELECT COUNT(*) FROM tbl_tag TG");
+        sqlCountPage.AppendLine($"{GetFilteredQuery(filter)};");
+
+        sqlCountPage.AppendLine("-- Fim da consulta COUNT e início da consulta de dados");
+
+        var sql =  GetBaseQuery();
+        sql.AppendLine($"{GetFilteredQuery(filter)}");
+        sql.AppendLine("ORDER BY TG.ID DESC");
+        if (offset > 0)
+            sql.AppendLine($"LIMIT {start}, {offset}");
+        sqlCountPage.AppendLine(sql.ToString());
+
+        var result = await databaseExecutor.ExecuteAsync(
+            async con =>
+            {
+                await using var multi = await con.QueryMultipleAsync(sqlCountPage.ToString() ,new  { IdUser = filter.IdUser });
+
+                var totalItems = (await multi.ReadAsync<int>()).FirstOrDefault();
+                var items = (await multi.ReadAsync<Tag>()).ToList();
+                return (items, totalItems);
+            });
+
+        return result;
+    }
+
     public async Task<int> UpdateAsync(Tag tag)
     {
         tag.UpdatedAt = DateTime.Now;
@@ -72,13 +103,13 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
     private static StringBuilder GetBaseQuery()
     {
         var sql = new StringBuilder();
-        sql.AppendLine("SELECT ID,          ");
-        sql.AppendLine("       NAME         AS Name,");
+        sql.AppendLine("SELECT ID,                         ");
+        sql.AppendLine("       NAME         AS Name,       ");
         sql.AppendLine("       DESCRIPTION  AS Description,");
-        sql.AppendLine("       ACTIVE       AS Active,");
-        sql.AppendLine("       CREATED_AT   AS CreatedAt,");
-        sql.AppendLine("       UPDATED_AT   AS UpdatedAt");
-        sql.AppendLine("FROM tbl_tag        ");
+        sql.AppendLine("       ACTIVE       AS Active,     ");
+        sql.AppendLine("       CREATED_AT   AS CreatedAt,  ");
+        sql.AppendLine("       UPDATED_AT   AS UpdatedAt   ");
+        sql.AppendLine("FROM tbl_tag   TG                 ");
         return sql;
     }
 
@@ -95,5 +126,23 @@ public class TagRepository(IDatabaseExecutor databaseExecutor) : ITagRepository
              var missingTagIds = tagIds.Except(existingTagIds);
 
              return missingTagIds;
+    }
+
+    private static StringBuilder GetFilteredQuery(TagFilterDTo filter)
+    {
+        var sql = new StringBuilder();
+        if (filter is null) return sql;
+
+        if(!string.IsNullOrWhiteSpace(filter.Name))
+        {
+            sql.Append($"WHERE TG.NAME LIKE '%{filter.Name}%'");
+        }
+
+        if(filter.Active != ActivationState.Unfiltered)
+        {
+            sql.Append(sql.Length > 0 ? "AND " : "WHERE ");
+            sql.AppendLine($" TG.ACTIVE = {filter.Active.ToInt()}");
+        }
+        return sql;
     }
 }

@@ -28,7 +28,7 @@ public class TodoController(ITodoRepository todoRepository, IMapper mapper)
         return Ok(todosResult.Take(100));
     }
 
-    [HttpPost("doFilter")]
+    [HttpPost("do-filter")]
     public async Task<PagedResultDTo<Todo>> DoFilter(ToDoFilterDTo filter)
     {
         var pagination =

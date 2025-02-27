@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoList.Application.DTOs.Shared;
 using TodoList.Application.DTOs.Tag;
+using TodoList.Application.Helpers;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
@@ -12,10 +14,10 @@ namespace TodoList.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/tag")]
+[Route("api/[controller]")]
 public class TagController(ITagRepository tagRepository, IMapper mapper) : ControllerBase
 {
-  [AllowAnonymous]
+
   [HttpGet("{id:int}")]
     public async Task<ActionResult<Tag>> GetId(int id)
     {
@@ -28,13 +30,26 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
         return Ok(tag);
     }
 
-    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Tag>>> GetAllAsync()
     {
         var tags = await tagRepository.GetAllAsync();
         return Ok(tags);
     }
+
+    [CheckRoles(Roles.Admin)]
+    [HttpPost("do-filter")]
+    public async Task<ActionResult<PagedResultDTo<Tag>>> DoFilter(TagFilterDTo filter)
+    {
+        var pagination = PaginationHelper.CalculatePagination(filter.Page, filter.PageSize);
+        var (tags, totalItems) = await tagRepository.FindByFilter(filter, pagination.Start,
+            pagination.PageSize);
+        var model = PaginationHelper.CreatePagedResult(tags, totalItems, pagination);
+        Console.WriteLine("entrei aqui");
+
+        return Ok(model);
+    }
+
     [HttpPost]
     [CheckRoles(Roles.Admin)]
     public async Task<ActionResult<Tag>> CreateAsync(CreateTagDTo createTagDTo)

@@ -74,6 +74,28 @@ public class UserRepository : IUserRepository
             await con.ExecuteAsync(sql.ToString(), new { Id = id, Password = password }));
     }
 
+    public Task<UserResponseWithoutPasswordDTo> UpdateUserProfileAsync(int id, string name)
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("UPDATE tbl_user         ");
+        sql.AppendLine("SET NAME = @Name,       ");
+        sql.AppendLine("UPDATED_AT = @UpdatedAt ");
+        sql.AppendLine("WHERE ID = @Id;");
+        return _dataBaseExecutor.ExecuteAsync(async con =>
+        {
+            await con.ExecuteAsync(sql.ToString(), new { Id = id, Name = name, UpdatedAt = DateTime.Now });
+            var updateUser = await GetUserByIdAsync(id);
+            return new UserResponseWithoutPasswordDTo
+            {
+                Id = updateUser.Id,
+                Name = updateUser.Name,
+                Email = updateUser.Email,
+                Active = updateUser.Active,
+                CreatedAt = updateUser.CreatedAt,
+                UpdatedAt = updateUser.UpdatedAt
+            };
+        });
+    }
 
     private static StringBuilder GetRoles()
     {

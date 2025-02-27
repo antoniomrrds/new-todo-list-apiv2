@@ -4,9 +4,9 @@ using TodoList.Application.Validators.Shared;
 
 namespace TodoList.Application.Validators.User;
 
-public class ChangePassword:AbstractValidator<ChangePasswordDTo>
+public class ChangePasswordValidator:AbstractValidator<ChangePasswordDTo>
 {
-    public ChangePassword()
+    public ChangePasswordValidator()
     {
         RuleFor(x => x.Password)
             .SetValidator(new PasswordValidator());

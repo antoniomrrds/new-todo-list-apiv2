@@ -4,7 +4,6 @@ namespace TodoList.Domain.Entities;
 public sealed class Tag: BaseEntity
 {
     public string Name { get; set; } = string.Empty;
-    public string Color { get; set; } = "#FFFFFF";
     public string Description { get; set; } = string.Empty;
     public ActivationState Active { get; set; }
     public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm:ss");
