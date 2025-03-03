@@ -9,6 +9,8 @@ public  record TodoWithTagsAndCategoriesDTo
 {
     public int Id { get; init; }
     public string Name { get; init; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public string UserEmail { get; set; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public CompletionStatus IsCompleted { get; init; }
     public ActivationState Active { get; init; }

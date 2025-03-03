@@ -45,8 +45,6 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
         var (tags, totalItems) = await tagRepository.FindByFilter(filter, pagination.Start,
             pagination.PageSize);
         var model = PaginationHelper.CreatePagedResult(tags, totalItems, pagination);
-        Console.WriteLine("entrei aqui");
-
         return Ok(model);
     }
 
@@ -65,7 +63,7 @@ public class TagController(ITagRepository tagRepository, IMapper mapper) : Contr
 
     [HttpPut("{id:int}")]
     [CheckRoles(Roles.Admin)]
-    public async Task<ActionResult<Tag>> UpdateAsync(int id , UpdateTagDTo updateTagDTo)
+    public async Task<ActionResult<Tag>> UpdateAsync(int id, UpdateTagDTo updateTagDTo)
     {
         var existTag = await tagRepository.GetByIdAsync(id);
         if (existTag.Id == DefaultValues.IdNullValue)

@@ -2,11 +2,12 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.DTOs.Category;
+using TodoList.Application.DTOs.Shared;
+using TodoList.Application.Helpers;
 using TodoList.Application.ports.Repositories;
 using TodoList.Domain.Constants;
 using TodoList.Domain.Entities;
 using TodoList.Domain.Enums;
-using TodoList.Domain.extensions;
 using TodoList.Infrastructure.Helpers;
 
 namespace TodoList.Api.Controllers;
@@ -72,5 +73,18 @@ public class CategoryController(ICategoryRepository categoryRepository, IMapper 
         await categoryRepository.DeleteCategoryByIdAsync(id);
         return NoContent();
     }
+
+    [CheckRoles(Roles.Admin)]
+    [HttpPost("do-filter")]
+    public async Task<ActionResult<PagedResultDTo<Category>>> DoFilter(CategoryFilterDTo filter)
+    {
+        var pagination = PaginationHelper.CalculatePagination(filter.Page, filter.PageSize);
+        var (tags, totalItems) = await categoryRepository.FindByFilter(filter, pagination.Start,
+            pagination.PageSize);
+        var model = PaginationHelper.CreatePagedResult(tags, totalItems, pagination);
+
+        return Ok(model);
+    }
+
 
 }

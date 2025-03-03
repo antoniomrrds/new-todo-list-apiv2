@@ -19,6 +19,8 @@ public sealed class Todo : BaseEntity , ITodo
     public int IdUser { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string UserEmail { get; set; } = string.Empty;
+    public Guid IdImage { get; }
+    public string UrlImage { get;  } = string.Empty;
     public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;

@@ -50,19 +50,6 @@ public static class DependencyInjection
         }).AddJwtBearer(options =>
         {
             options.TokenValidationParameters = Token.GetTokenValidationParameters(configuration);
-            // options.Events = new JwtBearerEvents
-            // {
-            //     OnMessageReceived = context =>
-            //     {
-            //         var cookie = context.Request.Cookies["token"];
-            //         if (!string.IsNullOrEmpty(cookie))
-            //         {
-            //             context.Token = cookie; // Define o token a ser validado.
-            //         }
-            //
-            //         return Task.CompletedTask;
-            //     }
-            // };
         });
         RegisterRepositories(services);
     }

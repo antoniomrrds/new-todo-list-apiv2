@@ -46,7 +46,6 @@ namespace TodoList.Api.Controllers
         [HttpGet("files/{fileId}/url")]
         public async Task<IActionResult> GetFileUrl([FromRoute] Guid fileId)
         {
-            Console.WriteLine(Environment.GetEnvironmentVariable("BLOB_STORAGE_CONTAINER_NAME"));
             string fileUrl = await _blobService.GetFileUrl(fileId);
             return Ok(fileUrl);
         }

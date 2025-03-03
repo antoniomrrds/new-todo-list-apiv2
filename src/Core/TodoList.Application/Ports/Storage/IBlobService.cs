@@ -7,6 +7,6 @@ public interface IBlobService
     Task<Guid> UploadAsync(Stream stream, string contentType, CancellationToken cancellationToken = default);
     Task<FileResponseDTo> DownloadAsync(Guid fileId, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid fileId, CancellationToken cancellationToken = default);
-    Task<string> GetFileUrl(Guid fileId);
+    Task<string> GetFileUrl(Guid fileId, CancellationToken cancellationToken = default);
 }
 

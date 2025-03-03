@@ -8,7 +8,8 @@ public record UserRolesDTo
     public string Name { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public ActivationState Active { get; init; }
-
+    public Guid IdImage { get; }
+    public string UrlImage { get;  } = string.Empty;
     public IEnumerable<RolesDTO> Roles { get; private set; } = new List<RolesDTO>();
 
     public void SetRoles(IEnumerable<RolesDTO> roles)

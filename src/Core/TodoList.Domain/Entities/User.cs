@@ -9,6 +9,10 @@ public class User: BaseEntity
     public string Email { get; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
     public ActivationState Active { get; set; }
+    public Guid IdImage { get; set; }
+    public string UrlImage { get;  } = string.Empty;
+   public string CreatedAtFormatted => CreatedAt.ToString("dd/MM/yyyy HH:mm:ss");
+    public string UpdatedAtFormatted => UpdatedAt.ToString("dd/MM/yyyy HH:mm:ss");
 
     public User ()
     {

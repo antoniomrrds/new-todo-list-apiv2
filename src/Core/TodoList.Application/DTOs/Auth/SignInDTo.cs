@@ -10,5 +10,5 @@ public record SignInDTo
 
 public record SignInResponseDTo(string Token);
 
-public record SessionData(string Name, string Email, Roles[] Roles );
+public record SessionData(string Name, string Email, Roles[] Roles, string UrlImage);
 

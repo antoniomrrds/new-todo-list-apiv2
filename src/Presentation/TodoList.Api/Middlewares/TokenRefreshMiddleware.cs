@@ -42,7 +42,7 @@ public async Task InvokeAsync(HttpContext context)
             {
                 var userRoles = await userRepository.GetUserRolesAsync(userId);
                 var roles = userRoles.Roles.Select(r => r.RoleType).ToArray();
-                var sessionData = new SessionData(userRoles.Name, userRoles.Email, roles);
+                var sessionData = new SessionData(userRoles.Name, userRoles.Email, roles, userRoles.UrlImage);
                 CookieHelper.SetAuthCookies(context.Response, accessToken, refreshToken, sessionData);
             }
 
@@ -64,7 +64,7 @@ public async Task InvokeAsync(HttpContext context)
             var newRefreshToken = tokenGenerator.GenerateRefreshToken(userRoles);
             var roles = userRoles.Roles.Select(r => r.RoleType).ToArray();
 
-            var sessionData = new SessionData(userRoles.Name, userRoles.Email, roles);
+            var sessionData = new SessionData(userRoles.Name, userRoles.Email, roles, userRoles.UrlImage);
             CookieHelper.SetAuthCookies(context.Response, newAccessToken, newRefreshToken, sessionData);
 
 

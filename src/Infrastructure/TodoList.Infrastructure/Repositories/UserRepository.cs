@@ -74,6 +74,36 @@ public class UserRepository : IUserRepository
             await con.ExecuteAsync(sql.ToString(), new { Id = id, Password = password }));
     }
 
+    public  Task<UserResponseWithoutPasswordDTo> UpdateUserImageAsync(UserUpdateImageDTo userUpdateImageDTo)
+    {
+        var sql = new StringBuilder();
+        sql.AppendLine("UPDATE tbl_user ");
+        sql.AppendLine("SET URL_IMAGE = @UrlImage, ");
+        sql.AppendLine("IMAGE_ID = @IdImage ");
+        sql.AppendLine("WHERE ID = @Id;");
+        return _dataBaseExecutor.ExecuteAsync(async con =>
+        {
+            await con.ExecuteAsync(sql.ToString(),
+                new
+                {
+                    Id = userUpdateImageDTo.Id, UrlImage = userUpdateImageDTo.ImageUrl,
+                    IdImage = userUpdateImageDTo.FileId
+                });
+            var updateUser = await GetUserByIdAsync(userUpdateImageDTo.Id);
+            return new UserResponseWithoutPasswordDTo
+            {
+                Id = updateUser.Id,
+                Name = updateUser.Name,
+                Email = updateUser.Email,
+                Active = updateUser.Active,
+                IdImage = updateUser.IdImage,
+                UrlImage = updateUser.UrlImage,
+                CreatedAt = updateUser.CreatedAt,
+                UpdatedAt = updateUser.UpdatedAt
+            };
+        });
+    }
+
     public Task<UserResponseWithoutPasswordDTo> UpdateUserProfileAsync(int id, string name)
     {
         var sql = new StringBuilder();
@@ -116,7 +146,9 @@ public class UserRepository : IUserRepository
         sql.AppendLine("SELECT TU.ID        AS Id         ,");
         sql.AppendLine("       TU.NAME      AS Name       ,");
         sql.AppendLine("       TU.EMAIL     AS Email      ,");
-        sql.AppendLine("       TU.ACTIVE    AS Active     ");
+        sql.AppendLine("       TU.URL_IMAGE AS UrlImage   ,");
+        sql.AppendLine("       TU.IMAGE_ID  AS IdImage    ,");
+        sql.AppendLine("       TU.ACTIVE    AS Active      ");
         return sql;
     }
     private static StringBuilder GetBaseQuery()

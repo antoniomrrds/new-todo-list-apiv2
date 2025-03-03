@@ -6,7 +6,8 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite:latest
     container_name: runtrackr.blob-storage
     volumes:
-      - containers/blob_storage/data:/data
+      - azurite-data:/data  # Usando o volume Docker
+
     ports:
       - "10000:10000"  # Porta para o serviço de Blob
     restart: always
@@ -45,3 +46,5 @@ networks:
 volumes:
   mysql-data:
     driver: local  # Volume persistente para o MySQL
+  azurite-data:
+    driver: local  # Volume persistente para o Azurite

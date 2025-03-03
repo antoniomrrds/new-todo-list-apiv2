@@ -11,4 +11,5 @@ public interface IUserRepository
     Task<User> GetUserByIdAsync(int id);
     Task ChangePasswordAsync(int id, string password);
     Task<UserResponseWithoutPasswordDTo>  UpdateUserProfileAsync(int id, string name);
+    Task<UserResponseWithoutPasswordDTo> UpdateUserImageAsync(UserUpdateImageDTo userUpdateImageDTo);
 }

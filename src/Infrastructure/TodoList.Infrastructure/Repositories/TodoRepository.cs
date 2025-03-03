@@ -126,6 +126,8 @@ public class TodoRepository(IDatabaseExecutor databaseExecutor) : ITodoRepositor
                 Description = todo.Description,
                 IsCompleted = todo.IsCompleted,
                 Active = todo.Active,
+                UserEmail = todo.UserEmail,
+                UserName = todo.UserName,
                 CreatedAt = todo.CreatedAt,
                 UpdatedAt = todo.UpdatedAt,
                 Status = todo.Status,
@@ -315,6 +317,8 @@ private static StringBuilder GetBaseQuery()
     sql.AppendLine("       TU.NAME                               AS UserName,                             ");
     sql.AppendLine("       TU.EMAIL                              AS UserEmail,                            ");
     sql.AppendLine("       TD.NAME                               AS Name,                                 ");
+    sql.AppendLine("       TU.URL_IMAGE                          AS UrlImage,                             ");
+    sql.AppendLine("       TU.IMAGE_ID                           AS IdImage,                              ");
     sql.AppendLine("       TD.DESCRIPTION                        AS Description,                          ");
     sql.AppendLine("       TD.IS_COMPLETED                       AS IsCompleted,                          ");
     sql.AppendLine("       TD.EXPIRATION_DATE                    AS ExpirationDate,                       ");

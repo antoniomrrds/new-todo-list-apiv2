@@ -77,7 +77,7 @@ public sealed class AuthController : ControllerBase
         // Usando o CookieHelper para definir os cookies
         var roles  = userRoles.Roles.Select(r => r.RoleType).ToArray();
 
-        var sessionData = new SessionData(user.Name, user.Email, roles);
+        var sessionData = new SessionData(user.Name, user.Email, roles , user.UrlImage);
         CookieHelper.SetAuthCookies(Response, token, refreshToken, sessionData);
 
         return Ok();
