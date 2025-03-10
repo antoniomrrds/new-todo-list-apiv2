@@ -11,11 +11,16 @@ Antes de começar, certifique-se de ter instalado:
 
 - 🐳 [Docker](https://www.docker.com/get-started)
 - ⚙️ [.NET SDK](https://dotnet.microsoft.com/download)
+- ⚙️ [Azure Storage Explorer today](https://azure.microsoft.com/en-us/products/storage/storage-explorer)
 - 🖥️ [Visual Studio Community 2022](https://visualstudio.microsoft.com/vs/community/) ou sua IDE preferida.
+
+  
 
 ## Rodando Localmente 🚀
 
 Para rodar este projeto localmente, siga as instruções abaixo:
+
+
 
 1. **Clone o projeto:**
 
@@ -62,19 +67,23 @@ docker-compose up -d
    ```bash
    dotnet watch
    ```
+
+7. **Inicie o Azure Storage Explorer today**
+
+```bash
+antes lembre de ter baixado Azure Storage Explorer today
+crie um blob chamado images
+```
  
 ## Screenshots 📸
 ![Captura de tela 2025-03-10 184523](https://github.com/user-attachments/assets/dcae9e8f-b0db-486a-842a-c8d42600b438)
-
-  
-
 
 ## Stack utilizada 🛠️
 **Back-end:** 
 - 🖥️ C#
 - ⚙️ ASP.NET Core
 - 📦 Dapper
-- azurite
+- ⚙️ azurite
 
 **DataBase:** 
 - 🗄️ MySQL
